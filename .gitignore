@@ -1,0 +1,5 @@
+.env
+k8s/postgres/postgres-secret.yaml
+*.key
+*.crt
+*.pem
