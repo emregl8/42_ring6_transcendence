@@ -38,6 +38,51 @@ cluster() {
     fi
 }
 
+create_postgres_tls() {
+    if docker exec transcendence-control-plane kubectl get secret postgres-tls -n transcendence >/dev/null 2>&1; then
+        return
+    fi
+
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
+    trap 'rm -rf "$tmp_dir"' RETURN
+
+    local ca_key ca_cert server_key server_csr server_cert ext_file
+    ca_key="$tmp_dir/ca.key"
+    ca_cert="$tmp_dir/ca.crt"
+    server_key="$tmp_dir/server.key"
+    server_csr="$tmp_dir/server.csr"
+    server_cert="$tmp_dir/server.crt"
+    ext_file="$tmp_dir/openssl.cnf"
+
+    cat >"$ext_file" <<EOF
+subjectAltName=DNS:postgres,DNS:postgres.transcendence,DNS:postgres.transcendence.svc,DNS:postgres.transcendence.svc.cluster.local
+extendedKeyUsage=serverAuth
+EOF
+
+    openssl req -x509 -nodes -newkey rsa:2048 -days 365 -keyout "$ca_key" -out "$ca_cert" -subj "/CN=transcendence-postgres-ca"
+    openssl req -nodes -newkey rsa:2048 -keyout "$server_key" -out "$server_csr" -subj "/CN=postgres"
+    openssl x509 -req -in "$server_csr" -CA "$ca_cert" -CAkey "$ca_key" -CAcreateserial -out "$server_cert" -days 365 -extfile "$ext_file"
+
+        local server_crt_b64 server_key_b64 ca_crt_b64
+        server_crt_b64=$(base64 -w0 "$server_cert")
+        server_key_b64=$(base64 -w0 "$server_key")
+        ca_crt_b64=$(base64 -w0 "$ca_cert")
+
+        cat <<EOF | docker exec -i transcendence-control-plane kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+    name: postgres-tls
+    namespace: transcendence
+type: Opaque
+data:
+    server.crt: $server_crt_b64
+    server.key: $server_key_b64
+    ca.crt: $ca_crt_b64
+EOF
+}
+
 deploy() {
     echo "Deploying to Kubernetes..."
     KUBECTL="docker exec -i transcendence-control-plane kubectl"
@@ -73,6 +118,8 @@ deploy() {
     echo "Waiting for Vault pods to be ready..."
     $KUBECTL wait --for=condition=ready pod/vault-0 -n transcendence --timeout=180s
     
+    create_postgres_tls
+
     for file in k8s/postgres/*.yaml; do cat "$file" | $KUBECTL apply -f - || true; done
     cat k8s/backend/$CONFIGMAP | $KUBECTL apply -f -
     

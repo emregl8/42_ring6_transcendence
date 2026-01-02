@@ -22,10 +22,47 @@ spec:
         fsGroup: 999
         runAsUser: 999
         runAsNonRoot: true
+      initContainers:
+      - name: prepare-postgres-tls
+        image: alpine:3.20
+        command:
+        - sh
+        - -c
+        - >-
+          set -euo pipefail;
+          for f in server.crt server.key ca.crt; do
+            if [ ! -f "/input/${f}" ]; then
+              echo "${f} missing";
+              exit 1;
+            fi;
+          done;
+          cp /input/server.crt /tls/;
+          cp /input/server.key /tls/;
+          cp /input/ca.crt /tls/;
+          chown 999:999 /tls/server.crt /tls/server.key /tls/ca.crt;
+          chmod 600 /tls/server.key;
+          chmod 644 /tls/server.crt /tls/ca.crt
+        volumeMounts:
+        - name: postgres-tls-secret
+          mountPath: /input
+          readOnly: true
+        - name: postgres-tls
+          mountPath: /tls
       containers:
       - name: postgres
         image: transcendence-postgres:latest
         imagePullPolicy: Never
+        args:
+        - "-c"
+        - "ssl=on"
+        - "-c"
+        - "ssl_cert_file=/var/lib/postgresql/tls/server.crt"
+        - "-c"
+        - "ssl_key_file=/var/lib/postgresql/tls/server.key"
+        - "-c"
+        - "ssl_ca_file=/var/lib/postgresql/tls/ca.crt"
+        - "-c"
+        - "ssl_min_protocol_version=TLSv1.2"
         ports:
         - containerPort: 5432
         envFrom:
@@ -44,6 +81,9 @@ spec:
           mountPath: /tmp
         - name: run
           mountPath: /var/run/postgresql
+        - name: postgres-tls
+          mountPath: /var/lib/postgresql/tls
+          readOnly: true
         resources:
           requests:
             memory: "512Mi"
@@ -73,6 +113,12 @@ spec:
         emptyDir: {}
       - name: run
         emptyDir: {}
+      - name: postgres-tls
+        emptyDir: {}
+      - name: postgres-tls-secret
+        secret:
+          secretName: postgres-tls
+          defaultMode: 0400
   volumeClaimTemplates:
   - metadata:
       name: postgres-data

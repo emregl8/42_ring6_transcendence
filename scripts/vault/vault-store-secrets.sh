@@ -41,15 +41,22 @@ vault_kv_put "${NAMESPACE}" "${VAULT_POD}" "${VAULT_TOKEN}" "secret/database/pos
 	"POSTGRES_DB=\"${POSTGRES_DB}\""
 
 echo "Storing application configuration in Vault..."
-APP_VARS=$(parse_env_file "${ENV_FILE}" | grep -E '^(DB_HOST|DB_PORT|NODE_ENV|ALLOWED_ORIGINS)=')
+APP_VARS=$(parse_env_file "${ENV_FILE}" | grep -E '^(DB_HOST|DB_PORT|NODE_ENV|ALLOWED_ORIGINS|DB_SSL_ENABLED|DB_SSL_REJECT_UNAUTHORIZED|DB_SSL_CA_PATH)=')
 DB_HOST=$(echo "$APP_VARS" | grep '^DB_HOST=' | cut -d= -f2-)
 DB_PORT=$(echo "$APP_VARS" | grep '^DB_PORT=' | cut -d= -f2-)
 NODE_ENV=$(echo "$APP_VARS" | grep '^NODE_ENV=' | cut -d= -f2-)
 ALLOWED_ORIGINS=$(echo "$APP_VARS" | grep '^ALLOWED_ORIGINS=' | cut -d= -f2-)
+DB_SSL_ENABLED=$(echo "$APP_VARS" | grep '^DB_SSL_ENABLED=' | cut -d= -f2-)
+DB_SSL_REJECT_UNAUTHORIZED=$(echo "$APP_VARS" | grep '^DB_SSL_REJECT_UNAUTHORIZED=' | cut -d= -f2-)
+DB_SSL_CA_PATH=$(echo "$APP_VARS" | grep '^DB_SSL_CA_PATH=' | cut -d= -f2-)
 vault_kv_put "${NAMESPACE}" "${VAULT_POD}" "${VAULT_TOKEN}" "secret/application/config" \
 	"DB_HOST=\"${DB_HOST}\"" \
 	"DB_PORT=\"${DB_PORT}\"" \
 	"NODE_ENV=\"${NODE_ENV}\"" \
-	"ALLOWED_ORIGINS=\"${ALLOWED_ORIGINS}\""
+	"ALLOWED_ORIGINS=\"${ALLOWED_ORIGINS}\"" \
+	"DB_SSL_ENABLED=\"${DB_SSL_ENABLED}\"" \
+	"DB_SSL_REJECT_UNAUTHORIZED=\"${DB_SSL_REJECT_UZED}\"" \
+	"DB_SSL_CA_PATH=\"${DB_SSL_CA_PATH}\""
 
 echo "Secrets stored in Vault successfully!"
+NAUTHORI

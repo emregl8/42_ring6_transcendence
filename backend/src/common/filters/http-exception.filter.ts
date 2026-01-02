@@ -34,7 +34,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       method: request.method,
       message:
         process.env.NODE_ENV === 'production'
-          ? message
+          ? 'An error occurred'
           : exception instanceof Error
           ? exception.message
           : message,

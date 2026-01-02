@@ -70,6 +70,9 @@ data:
       "DB_HOST": "{{ .Data.data.DB_HOST }}",
       "DB_PORT": "{{ .Data.data.DB_PORT }}",
       "NODE_ENV": "{{ .Data.data.NODE_ENV }}",
-      "ALLOWED_ORIGINS": "{{ .Data.data.ALLOWED_ORIGINS }}"
+      "ALLOWED_ORIGINS": "{{ .Data.data.ALLOWED_ORIGINS }}",
+      "DB_SSL_ENABLED": "{{ .Data.data.DB_SSL_ENABLED }}",
+      "DB_SSL_REJECT_UNAUTHORIZED": "{{ .Data.data.DB_SSL_REJECT_UNAUTHORIZED }}",
+      "DB_SSL_CA_PATH": "{{ .Data.data.DB_SSL_CA_PATH }}"
     }
     {{- end }}

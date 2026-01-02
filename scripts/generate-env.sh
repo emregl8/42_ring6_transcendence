@@ -19,6 +19,9 @@ POSTGRES_PASSWORD=$DB_PASSWORD
 POSTGRES_DB=transcendence
 
 ALLOWED_ORIGINS=https://transcendence.local
+DB_SSL_ENABLED=true
+DB_SSL_REJECT_UNAUTHORIZED=true
+DB_SSL_CA_PATH=/etc/postgres-ca/ca.crt
 EOF
 chmod 600 .env
 
