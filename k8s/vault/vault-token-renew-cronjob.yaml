@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: vault-token-renew
+  namespace: transcendence
+spec:
+  schedule: "*/10 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        metadata:
+          labels:
+            app: vault-token-renew
+        spec:
+          serviceAccountName: vault-admin
+          restartPolicy: OnFailure
+          containers:
+          - name: renew
+            image: hashicorp/vault:1.21.1
+            command: ["/bin/sh"]
+            args: ["/scripts/renew-token.sh"]
+            env:
+            - name: VAULT_ADDR
+              value: "https://vault:8200"
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vault-admin-token
+                  key: token
+            - name: VAULT_CACERT
+              value: "/vault/tls/ca.crt"
+            volumeMounts:
+            - name: vault-tls
+              mountPath: /vault/tls
+              readOnly: true
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+            resources:
+              requests:
+                memory: "64Mi"
+                cpu: "50m"
+              limits:
+                memory: "128Mi"
+                cpu: "100m"
+            securityContext:
+              runAsUser: 100
+              readOnlyRootFilesystem: true
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+          volumes:
+          - name: vault-tls
+            secret:
+              secretName: vault-tls
+          - name: script
+            configMap:
+              name: vault-token-renew-script
+              defaultMode: 0555

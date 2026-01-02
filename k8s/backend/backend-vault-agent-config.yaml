@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-agent-config
+  namespace: transcendence
+data:
+  vault-agent-config.hcl: |
+    exit_after_auth = false
+    pid_file = "/vault/secrets/pidfile"
+
+    auto_auth {
+      method "kubernetes" {
+        mount_path = "auth/kubernetes"
+        config = {
+          role = "backend"
+        }
+      }
+
+      sink "file" {
+        config = {
+          path = "/vault/secrets/.vault-token"
+          mode = 0600
+        }
+      }
+    }
+
+    template {
+      source = "/vault/configs/database-template.tmpl"
+      destination = "/vault/secrets/database.json"
+      error_on_missing_key = true
+      wait {
+        min = "2s"
+        max = "10s"
+      }
+    }
+
+    template {
+      source = "/vault/configs/app-config-template.tmpl"
+      destination = "/vault/secrets/app-config.json"
+      error_on_missing_key = true
+      wait {
+        min = "2s"
+        max = "10s"
+      }
+    }
+
+    vault {
+      address = "https://vault:8200"
+      ca_cert = "/vault/tls/ca.crt"
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-agent-templates
+  namespace: transcendence
+data:
+  database-template.tmpl: |
+    {{- with secret "secret/data/database/postgres" }}
+    {
+      "POSTGRES_USER": "{{ .Data.data.POSTGRES_USER }}",
+      "POSTGRES_PASSWORD": "{{ .Data.data.POSTGRES_PASSWORD }}",
+      "POSTGRES_DB": "{{ .Data.data.POSTGRES_DB }}"
+    }
+    {{- end }}
+
+  app-config-template.tmpl: |
+    {{- with secret "secret/data/application/config" }}
+    {
+      "DB_HOST": "{{ .Data.data.DB_HOST }}",
+      "DB_PORT": "{{ .Data.data.DB_PORT }}",
+      "NODE_ENV": "{{ .Data.data.NODE_ENV }}",
+      "ALLOWED_ORIGINS": "{{ .Data.data.ALLOWED_ORIGINS }}"
+    }
+    {{- end }}

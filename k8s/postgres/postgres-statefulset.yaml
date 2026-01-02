@@ -25,7 +25,7 @@ spec:
       containers:
       - name: postgres
         image: transcendence-postgres:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Never
         ports:
         - containerPort: 5432
         envFrom:
@@ -58,9 +58,7 @@ spec:
             - -U
             - transcendence
           initialDelaySeconds: 30
-          periodSeconds: 10
           timeoutSeconds: 5
-          failureThreshold: 3
         readinessProbe:
           exec:
             command:
@@ -70,7 +68,6 @@ spec:
           initialDelaySeconds: 5
           periodSeconds: 5
           timeoutSeconds: 3
-          failureThreshold: 3
       volumes:
       - name: tmp
         emptyDir: {}
@@ -80,7 +77,8 @@ spec:
   - metadata:
       name: postgres-data
     spec:
-      accessModes: ["ReadWriteOnce"]
+      accessModes:
+        - ReadWriteOnce
       resources:
         requests:
-          storage: 10Gi
+          storage: 15Gi

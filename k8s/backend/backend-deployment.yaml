@@ -15,19 +15,112 @@ spec:
       labels:
         app: backend
     spec:
+      serviceAccountName: backend
       securityContext:
         seccompProfile:
           type: RuntimeDefault
         fsGroup: 1000
-        runAsUser: 1000
         runAsNonRoot: true
+      initContainers:
+      - name: vault-agent-init
+        image: hashicorp/vault:1.21.1
+        command:
+          - sh
+          - -c
+          - |
+            timeout=60
+            elapsed=0
+            export VAULT_ADDR="https://vault:8200"
+            export VAULT_CACERT="/vault/tls/ca.crt"
+            echo "Waiting for vault..."
+            until vault status -format=json >/dev/null 2>&1 || [ $elapsed -ge $timeout ]; do
+              sleep 2
+              elapsed=$((elapsed + 2))
+            done
+            
+            if [ $elapsed -ge $timeout ]; then
+              echo "ERROR: Vault not available."
+              exit 1
+            fi
+            
+            vault agent -config=/vault/config/vault-agent-config.hcl -exit-after-auth
+        env:
+          - name: VAULT_ADDR
+            value: "https://vault:8200"
+        volumeMounts:
+          - name: vault-agent-config
+            mountPath: /vault/config
+          - name: vault-templates
+            mountPath: /vault/configs
+          - name: vault-secrets
+            mountPath: /vault/secrets
+          - name: vault-tls
+            mountPath: /vault/tls
+            readOnly: true
+        securityContext:
+          runAsUser: 100
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
       containers:
+      - name: vault-agent
+        image: hashicorp/vault:1.21.1
+        command:
+          - sh
+          - -c
+          - |
+            vault agent -config=/vault/config/vault-agent-config.hcl || sleep infinity
+        env:
+          - name: VAULT_ADDR
+            value: "https://vault:8200"
+        volumeMounts:
+          - name: vault-agent-config
+            mountPath: /vault/config
+          - name: vault-templates
+            mountPath: /vault/configs
+          - name: vault-secrets
+            mountPath: /vault/secrets
+          - name: vault-tls
+            mountPath: /vault/tls
+            readOnly: true
+        securityContext:
+          runAsUser: 100
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        livenessProbe:
+          exec:
+            command:
+              - sh
+              - -c
+              - "test -f /vault/secrets/.vault-token && test -f /vault/secrets/pidfile || exit 1"
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          failureThreshold: 3
       - name: backend
         image: transcendence-backend:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Never
         ports:
         - containerPort: 3000
         securityContext:
+          runAsUser: 1000
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
           capabilities:
@@ -38,11 +131,15 @@ spec:
           mountPath: /tmp
         - name: cache
           mountPath: /app/.npm
+        - name: vault-secrets
+          mountPath: /vault/secrets
+          readOnly: true
+        env:
+        - name: VAULT_SECRETS_PATH
+          value: "/vault/secrets"
         envFrom:
         - configMapRef:
             name: backend-config
-        - secretRef:
-            name: postgres-secret
         resources:
           requests:
             memory: "128Mi"
@@ -50,6 +147,13 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
+        startupProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 3
+          failureThreshold: 30
         livenessProbe:
           httpGet:
             path: /api/health
@@ -67,3 +171,20 @@ spec:
         emptyDir: {}
       - name: cache
         emptyDir: {}
+      - name: vault-agent-config
+        configMap:
+          name: vault-agent-config
+      - name: vault-templates
+        configMap:
+          name: vault-agent-templates
+      - name: vault-secrets
+        emptyDir:
+          medium: Memory
+          sizeLimit: 10Mi
+      - name: vault-tls
+        secret:
+          secretName: vault-tls
+          defaultMode: 0400
+          items:
+            - key: ca.crt
+              path: ca.crt

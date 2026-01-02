@@ -1,0 +1,180 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: vault
+  namespace: transcendence
+  labels:
+    app: vault
+spec:
+  serviceName: vault-internal
+  replicas: 3
+  selector:
+    matchLabels:
+      app: vault
+  template:
+    metadata:
+      labels:
+        app: vault
+    spec:
+      serviceAccountName: vault
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+        runAsUser: 100
+        fsGroup: 1000
+      initContainers:
+        - name: config-init
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              cp /vault/config-template/vault-config.hcl /vault/config/vault-config.hcl
+              sed -i "s/POD_NAME/${HOSTNAME}/g" /vault/config/vault-config.hcl
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: vault-config-template
+              mountPath: /vault/config-template
+            - name: vault-config-runtime
+              mountPath: /vault/config
+          securityContext:
+            runAsUser: 100
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      containers:
+        - name: vault
+          image: hashicorp/vault:1.21.1
+          command:
+            - vault
+            - server
+            - -config=/vault/config/vault-config.hcl
+          ports:
+            - name: http
+              containerPort: 8200
+            - name: cluster
+              containerPort: 8201
+          env:
+            - name: VAULT_ADDR
+              value: "https://127.0.0.1:8200"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VAULT_API_ADDR
+              value: "https://$(POD_NAME).vault-internal.transcendence.svc.cluster.local:8200"
+            - name: VAULT_CLUSTER_ADDR
+              value: "https://$(POD_NAME).vault-internal.transcendence.svc.cluster.local:8201"
+          volumeMounts:
+            - name: vault-data
+              mountPath: /vault/data
+            - name: vault-config-runtime
+              mountPath: /vault/config
+            - name: vault-tls
+              mountPath: /vault/tls
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /v1/sys/health?standbyok=true&uninitcode=204&sealedcode=204
+              port: 8200
+              scheme: HTTPS
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /v1/sys/health?standbyok=true&uninitcode=204&sealedcode=204
+              port: 8200
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+        - name: vault-auto-unseal
+          image: hashicorp/vault:1.21.1
+          command:
+            - /bin/sh
+            - -c
+            - |
+              if [ -x /scripts/vault-auto-unseal.sh ]; then
+                exec /scripts/vault-auto-unseal.sh
+              fi
+              echo "[Auto-Unseal] ERROR: /scripts/vault-auto-unseal.sh not found or not executable"
+              sleep 3600
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VAULT_ADDR
+              value: "https://127.0.0.1:8200"
+            - name: VAULT_CACERT
+              value: "/vault/tls/ca.crt"
+          volumeMounts:
+            - name: vault-tls
+              mountPath: /vault/tls
+              readOnly: true
+            - name: vault-auto-unseal-script
+              mountPath: /scripts
+              readOnly: true
+            - name: vault-unseal-keys
+              mountPath: /vault/unseal
+              readOnly: true
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "25m"
+            limits:
+              memory: "96Mi"
+              cpu: "100m"
+          securityContext:
+            runAsUser: 100
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: vault-config-template
+          configMap:
+            name: vault-config
+        - name: vault-config-runtime
+          emptyDir: {}
+        - name: vault-tls
+          secret:
+            secretName: vault-tls
+            defaultMode: 0400
+        - name: vault-auto-unseal-script
+          configMap:
+            name: vault-auto-unseal-script
+            defaultMode: 0555
+        - name: vault-unseal-keys
+          secret:
+            secretName: vault-unseal-keys
+            defaultMode: 0440
+  volumeClaimTemplates:
+    - metadata:
+        name: vault-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
