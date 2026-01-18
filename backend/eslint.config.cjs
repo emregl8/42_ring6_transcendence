@@ -5,6 +5,7 @@ const importPlugin = require('eslint-plugin-import');
 const securityPlugin = require('eslint-plugin-security');
 
 module.exports = [
+  prettierConfig,
   {
     files: ['**/*.ts'],
     languageOptions: {
@@ -122,5 +123,4 @@ module.exports = [
       'security/detect-pseudoRandomBytes': 'error',
     },
   },
-  prettierConfig,
 ];
