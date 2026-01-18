@@ -1,51 +1,90 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpException,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common';
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
-  catch(exception: unknown, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    const isDevelopment = process.env.NODE_ENV === 'development';
 
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+    const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message =
-      exception instanceof HttpException
-        ? exception.message
-        : 'Internal server error';
+    const message = exception instanceof HttpException ? exception.message : 'Internal server error';
 
-    const errorResponse = {
-      statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      method: request.method,
-      message:
-        process.env.NODE_ENV === 'production'
-          ? 'An error occurred'
-          : exception instanceof Error
-          ? exception.message
-          : message,
-    };
+    const errorResponse = isDevelopment
+      ? this.getDevelopmentErrorResponse(status, request, exception, message)
+      : this.getProductionErrorResponse(status);
 
-    this.logger.error(
-      `${request.method} ${request.url} - Status: ${status} - ${
-        exception instanceof Error ? exception.stack : 'Unknown error'
-      }`,
-    );
+    const sanitizedUrl = this.sanitizeUrl(request.url);
+
+    this.logger.error(`${request.method} ${sanitizedUrl} - Status: ${status} - ${message}`);
 
     response.status(status).json(errorResponse);
+  }
+
+  private getProductionErrorResponse(status: number): { statusCode: number; message: string } {
+    const errorMessages = new Map([
+      [400, 'Bad request'],
+      [401, 'Unauthorized'],
+      [403, 'Forbidden'],
+      [404, 'Resource not found'],
+      [429, 'Too many requests'],
+      [500, 'Internal server error'],
+      [503, 'Service unavailable'],
+    ]);
+
+    const errorMessage = errorMessages.get(status);
+    return {
+      statusCode: status,
+      message: errorMessage !== null && errorMessage !== undefined && errorMessage !== '' ? errorMessage : 'An error occurred',
+    };
+  }
+
+  private getDevelopmentErrorResponse(
+    status: number,
+    request: Request,
+    exception: unknown,
+    message: string
+  ): {
+    statusCode: number;
+    timestamp: string;
+    path: string;
+    method: string;
+    message: string;
+    stack?: string;
+  } {
+    const stack =
+      exception instanceof Error
+        ? exception.stack !== null && exception.stack !== undefined && exception.stack !== ''
+          ? exception.stack.split('\n').slice(0, 10).join('\n')
+          : undefined
+        : undefined;
+
+    return {
+      statusCode: status,
+      timestamp: new Date().toISOString(),
+      path: this.sanitizeUrl(request.url),
+      method: request.method,
+      message: exception instanceof Error ? exception.message : message,
+      ...(stack !== null && stack !== undefined && stack !== '' ? { stack } : {}),
+    };
+  }
+
+  private sanitizeUrl(url: string): string {
+    const urlObj = new URL(url, 'http://localhost');
+
+    const sensitiveParams = ['token', 'password', 'secret', 'key', 'api_key', 'apiKey'];
+
+    sensitiveParams.forEach((param) => {
+      if (urlObj.searchParams.has(param)) {
+        urlObj.searchParams.set(param, '[REDACTED]');
+      }
+    });
+
+    return urlObj.pathname + urlObj.search;
   }
 }

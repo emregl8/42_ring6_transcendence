@@ -28,6 +28,6 @@ kubectl create secret generic postgres-secret \
 	--from-literal=POSTGRES_PASSWORD="${POSTGRES_PASSWORD}" \
 	--from-literal=POSTGRES_DB="${POSTGRES_DB}" \
 	--namespace=${NAMESPACE} \
-	--dry-run=client -o yaml | kubectl apply -f -
+	--dry-run=client -o yaml | kubectl apply -f - >/dev/null
 
 echo "Kubernetes Secret created successfully!"

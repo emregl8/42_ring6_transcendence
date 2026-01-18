@@ -3,11 +3,9 @@ kind: StatefulSet
 metadata:
   name: vault
   namespace: transcendence
-  labels:
-    app: vault
 spec:
   serviceName: vault-internal
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: vault
@@ -111,13 +109,7 @@ spec:
           image: hashicorp/vault:1.21.1
           command:
             - /bin/sh
-            - -c
-            - |
-              if [ -x /scripts/vault-auto-unseal.sh ]; then
-                exec /scripts/vault-auto-unseal.sh
-              fi
-              echo "[Auto-Unseal] ERROR: /scripts/vault-auto-unseal.sh not found or not executable"
-              sleep 3600
+            - /scripts/vault-auto-unseal.sh
           env:
             - name: POD_NAME
               valueFrom:
@@ -137,6 +129,8 @@ spec:
             - name: vault-unseal-keys
               mountPath: /vault/unseal
               readOnly: true
+            - name: vault-tmp
+              mountPath: /tmp
           resources:
             requests:
               memory: "32Mi"
@@ -169,6 +163,8 @@ spec:
           secret:
             secretName: vault-unseal-keys
             defaultMode: 0440
+        - name: vault-tmp
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: vault-data

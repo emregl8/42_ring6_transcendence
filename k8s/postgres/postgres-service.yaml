@@ -3,11 +3,10 @@ kind: Service
 metadata:
   name: postgres
   namespace: transcendence
-  labels:
-    app: postgres
 spec:
+  clusterIP: None
   ports:
-  - port: 5432
-    targetPort: 5432
+    - port: 5432
+      targetPort: 5432
   selector:
     app: postgres

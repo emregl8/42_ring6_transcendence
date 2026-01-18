@@ -12,10 +12,49 @@ metadata:
   namespace: transcendence
 spec:
   secretName: transcendence-tls
+  duration: 2160h
+  renewBefore: 360h
+  commonName: transcendence.local
+  isCA: false
   privateKey:
+    algorithm: ECDSA
+    size: 256
     rotationPolicy: Always
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+    - transcendence.local
+    - localhost
   issuerRef:
     name: selfsigned-issuer
     kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: postgres-tls
+  namespace: transcendence
+spec:
+  secretName: postgres-tls
+  duration: 2160h
+  renewBefore: 360h
+  commonName: postgres.transcendence.svc
+  isCA: false
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  usages:
+    - server auth
+    - client auth
   dnsNames:
-  - transcendence.local
+    - postgres
+    - postgres.transcendence
+    - postgres.transcendence.svc
+    - postgres.transcendence.svc.cluster.local
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io

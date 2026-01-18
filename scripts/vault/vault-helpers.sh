@@ -19,13 +19,17 @@ get_vault_token() {
 exec_vault() {
 	local namespace="$1" pod="$2"
 	shift 2
-	kubectl exec -n "$namespace" "$pod" -- sh -c "$*"
+	kubectl exec -n "$namespace" "$pod" -- sh -c "$*" 2>/dev/null
 }
 
 exec_vault_with_token() {
 	local namespace="$1" pod="$2" token="$3"
 	shift 3
-	kubectl exec -n "$namespace" "$pod" -- sh -c "VAULT_TOKEN='$token' VAULT_CACERT=/vault/tls/ca.crt $*"
+	if [ -z "$token" ]; then
+		echo "ERROR: Token is empty" >&2
+		return 1
+	fi
+	kubectl exec -n "$namespace" "$pod" -- sh -c "export VAULT_TOKEN='${token}' VAULT_CACERT=/vault/tls/ca.crt && $*" 2>/dev/null
 }
 
 validate_token() {

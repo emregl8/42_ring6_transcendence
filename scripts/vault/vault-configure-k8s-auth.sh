@@ -35,9 +35,7 @@ vault_write "${NAMESPACE}" "${VAULT_POD}" "${VAULT_TOKEN}" "auth/kubernetes/role
 	"bound_service_account_names=backend" \
 	"bound_service_account_namespaces=${NAMESPACE}" \
 	"policies=backend-policy" \
+	"audience=https://kubernetes.default.svc.cluster.local" \
 	"ttl=24h"
-
-echo "Enabling audit logging..."
-vault_exec_cmd "${NAMESPACE}" "${VAULT_POD}" "${VAULT_TOKEN}" "vault audit enable file file_path=/vault/data/audit.log" || echo "Warning: Audit logging setup failed"
 
 echo "Kubernetes authentication configured!"

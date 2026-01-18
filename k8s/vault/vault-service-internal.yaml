@@ -3,8 +3,6 @@ kind: Service
 metadata:
   name: vault-internal
   namespace: transcendence
-  labels:
-    app: vault
 spec:
   clusterIP: None
   publishNotReadyAddresses: true

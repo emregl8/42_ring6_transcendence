@@ -1,5 +1,5 @@
 MAKEFLAGS += --no-print-directory
-CLUSTER_NAME = transcendence
+NAMESPACE = transcendence
 
 all: help
 
@@ -7,76 +7,104 @@ dev:
 	@./scripts/dev.sh
 
 stop:
-	@docker exec transcendence-control-plane kubectl scale deployment/backend --replicas=0 -n transcendence 2>/dev/null || true
-	@docker exec transcendence-control-plane kubectl scale deployment/frontend --replicas=0 -n transcendence 2>/dev/null || true
-	@docker exec transcendence-control-plane kubectl scale statefulset/postgres --replicas=0 -n transcendence 2>/dev/null || true
-	@docker exec transcendence-control-plane kubectl scale statefulset/vault --replicas=0 -n transcendence 2>/dev/null || true
+	@kubectl scale deployment/backend --replicas=0 -n $(NAMESPACE) 2>/dev/null || true
+	@kubectl scale deployment/frontend --replicas=0 -n $(NAMESPACE) 2>/dev/null || true
+	@kubectl scale statefulset/postgres --replicas=0 -n $(NAMESPACE) 2>/dev/null || true
+	@kubectl scale statefulset/vault --replicas=0 -n $(NAMESPACE) 2>/dev/null || true
 	@$(MAKE) status
 
 start:
-	@docker exec transcendence-control-plane kubectl scale statefulset/vault --replicas=1 -n transcendence
+	@kubectl scale statefulset/vault --replicas=1 -n $(NAMESPACE)
 	@sleep 10
-	@docker exec transcendence-control-plane kubectl scale deployment/backend --replicas=2 -n transcendence
-	@docker exec transcendence-control-plane kubectl scale deployment/frontend --replicas=2 -n transcendence
-	@docker exec transcendence-control-plane kubectl scale statefulset/postgres --replicas=1 -n transcendence
+	@kubectl scale deployment/backend --replicas=1 -n $(NAMESPACE)
+	@kubectl scale deployment/frontend --replicas=1 -n $(NAMESPACE)
+	@kubectl scale statefulset/postgres --replicas=1 -n $(NAMESPACE)
 	@$(MAKE) status
 
 status:
 	@./scripts/status.sh
 
 logs-backend:
-	@docker exec transcendence-control-plane kubectl logs -n transcendence -l app=backend --tail=100 -f
+	@kubectl logs -n $(NAMESPACE) -l app=backend --tail=100 -f
 
 logs-frontend:
-	@docker exec transcendence-control-plane kubectl logs -n transcendence -l app=frontend --tail=100 -f
+	@kubectl logs -n $(NAMESPACE) -l app=frontend --tail=100 -f
 
 logs-postgres:
-	@docker exec transcendence-control-plane kubectl logs -n transcendence -l app=postgres --tail=100 -f
+	@kubectl logs -n $(NAMESPACE) -l app=postgres --tail=100 -f
 
 logs-vault:
-	@docker exec transcendence-control-plane kubectl logs -n transcendence -l app=vault --tail=100 -f
+	@kubectl logs -n $(NAMESPACE) -l app=vault --tail=100 -f
+
+lint:
+	@echo "Running lint..."
+	@cd backend && npm run lint
+
+lint-fix:
+	@echo "Running lint fix..."
+	@cd backend && npm run lint:fix
+
+format:
+	@echo "Running prettier format..."
+	@cd backend && npm run format
+
+format-check:
+	@echo "Checking prettier format..."
+	@cd backend && npm run format:check
 
 rebuild-backend:
 	@echo "Rebuilding backend..."
 	@docker build -t transcendence-backend:latest ./backend
-	@kind load docker-image transcendence-backend:latest --name $(CLUSTER_NAME)
-	@docker exec transcendence-control-plane kubectl delete pod -l app=backend -n transcendence
+	@docker save transcendence-backend:latest | sudo k3s ctr images import -
+	@kubectl delete pod -l app=backend -n $(NAMESPACE)
 	@echo "Backend rebuilt and restarted"
-	@$(MAKE) status
 
 rebuild-frontend:
 	@echo "Rebuilding frontend..."
 	@docker build -t transcendence-frontend:latest ./frontend
-	@kind load docker-image transcendence-frontend:latest --name $(CLUSTER_NAME)
-	@docker exec transcendence-control-plane kubectl delete pod -l app=frontend -n transcendence
+	@docker save transcendence-frontend:latest | sudo k3s ctr images import -
+	@kubectl delete pod -l app=frontend -n $(NAMESPACE)
 	@echo "Frontend rebuilt and restarted"
-	@$(MAKE) status
 
 rebuild-postgres:
 	@echo "Rebuilding postgres..."
 	@docker build -t transcendence-postgres:latest ./postgres
-	@kind load docker-image transcendence-postgres:latest --name $(CLUSTER_NAME)
-	@docker exec transcendence-control-plane kubectl delete pod -l app=postgres -n transcendence
+	@docker save transcendence-postgres:latest | sudo k3s ctr images import -
+	@kubectl delete pod -l app=postgres -n $(NAMESPACE)
 	@echo "Postgres rebuilt and restarted"
 	@$(MAKE) status
 
 shell-backend:
-	@docker exec -it transcendence-control-plane kubectl exec -it -n transcendence $$(docker exec transcendence-control-plane kubectl get pod -n transcendence -l app=backend -o jsonpath='{.items[0].metadata.name}') -- sh
+	@kubectl exec -it -n $(NAMESPACE) $$(kubectl get pod -n $(NAMESPACE) -l app=backend -o jsonpath='{.items[0].metadata.name}') -- sh
 
 shell-frontend:
-	@docker exec -it transcendence-control-plane kubectl exec -it -n transcendence $$(docker exec transcendence-control-plane kubectl get pod -n transcendence -l app=frontend -o jsonpath='{.items[0].metadata.name}') -- sh
+	@kubectl exec -it -n $(NAMESPACE) $$(kubectl get pod -n $(NAMESPACE) -l app=frontend -o jsonpath='{.items[0].metadata.name}') -- sh
 
 shell-postgres:
-	@docker exec -it transcendence-control-plane kubectl exec -it -n transcendence $$(docker exec transcendence-control-plane kubectl get pod -n transcendence -l app=postgres -o jsonpath='{.items[0].metadata.name}') -- psql -U transcendence
+	@kubectl exec -it -n $(NAMESPACE) $$(kubectl get pod -n $(NAMESPACE) -l app=postgres -o jsonpath='{.items[0].metadata.name}') -- psql -U transcendence
 
 shell-vault:
-	@docker exec -it transcendence-control-plane kubectl exec -it -n transcendence vault-0 -- sh
+	@kubectl exec -it -n $(NAMESPACE) vault-0 -- sh
 
 clean:
-	@echo "Cleaning up Kubernetes resources and cluster..."
-	@docker exec transcendence-control-plane kubectl delete namespace transcendence --ignore-not-found=true --timeout=60s 2>/dev/null || true
-	@docker exec transcendence-control-plane kubectl delete pvc --all -n transcendence 2>/dev/null || true
-	@kind delete cluster --name $(CLUSTER_NAME) 2>/dev/null || true
+	@echo "Force stopping all workloads..."
+	@kubectl delete deployment,statefulset,pod,job,daemonset --all -n $(NAMESPACE) --ignore-not-found=true --force --grace-period=0 --wait=false >/dev/null 2>&1 || true
+	@echo "Cleaning up secrets and certs..."
+	@kubectl delete secret --all -n $(NAMESPACE) --ignore-not-found=true --wait=false >/dev/null 2>&1 || true
+	@kubectl delete certificate --all -n $(NAMESPACE) --ignore-not-found=true --wait=false >/dev/null 2>&1 || true
+	@kubectl delete clusterissuer selfsigned-issuer --ignore-not-found=true --wait=false >/dev/null 2>&1 || true
+	@echo "Cleaning up PVCs..."
+	@kubectl get pvc -n $(NAMESPACE) -o name 2>/dev/null | xargs -r -I {} kubectl patch {} -n $(NAMESPACE) -p '{"metadata":{"finalizers":[]}}' --type=merge >/dev/null 2>&1 || true
+	@kubectl delete pvc --all -n $(NAMESPACE) --ignore-not-found=true --force --grace-period=0 --wait=false >/dev/null 2>&1 || true
+	@echo "Deleting namespace..."
+	@kubectl delete namespace $(NAMESPACE) --ignore-not-found=true --wait=false >/dev/null 2>&1 || true
+	@echo "Waiting for namespace to disappear..."
+	@for i in $$(seq 1 30); do \
+		if ! kubectl get ns $(NAMESPACE) >/dev/null 2>&1; then echo "Namespace deleted."; break; fi; \
+		kubectl patch ns $(NAMESPACE) -p '{"metadata":{"finalizers":[]}}' --type=merge >/dev/null 2>&1 || true; \
+		kubectl delete ns $(NAMESPACE) --ignore-not-found=true --grace-period=0 --force >/dev/null 2>&1 || true; \
+		sleep 2; \
+	done
 	@echo "Cleanup complete!"
 
 fclean: clean
@@ -93,7 +121,7 @@ help:
 	@echo "║                 MAKEFILE COMMANDS                  ║"
 	@echo "╠════════════════════════════════════════════════════╣"
 	@echo "║ 🚀 DEPLOYMENT                                      ║"
-	@echo "║   make dev      - Deploy cluster                   ║"
+	@echo "║   make dev      - Deploy to k3s                    ║"
 	@echo "╠════════════════════════════════════════════════════╣"
 	@echo "║ 🎮 CONTROL                                         ║"
 	@echo "║   make start        - Start all pods               ║"
@@ -101,7 +129,6 @@ help:
 	@echo "║   make status       - Live cluster status          ║"
 	@echo "╠════════════════════════════════════════════════════╣"
 	@echo "║ 🔧 MAINTENANCE                                     ║"
-	@echo "║   make install-deps      - Install backend deps    ║"
 	@echo "║   make rebuild-backend   - Rebuild backend         ║"
 	@echo "║   make rebuild-frontend  - Rebuild frontend        ║"
 	@echo "║   make rebuild-postgres  - Rebuild postgres        ║"
@@ -116,12 +143,19 @@ help:
 	@echo "║   make shell-postgres - Postgres psql access       ║"
 	@echo "║   make shell-vault    - Vault shell access         ║"
 	@echo "╠════════════════════════════════════════════════════╣"
+	@echo "║ ✨ QUALITY & STYLE                                 ║"
+	@echo "║   make lint           - Run ESLint                 ║"
+	@echo "║   make lint-fix       - Run ESLint fix             ║"
+	@echo "║   make format         - Run Prettier format        ║"
+	@echo "║   make format-check   - Check Prettier format      ║"
+	@echo "╠════════════════════════════════════════════════════╣"
 	@echo "║ 🧹 CLEANUP                                         ║"
-	@echo "║   make clean    - Delete namespace and cluster     ║"
+	@echo "║   make clean    - Delete namespace                 ║"
 	@echo "║   make fclean   - Full cleanup                     ║"
 	@echo "╚════════════════════════════════════════════════════╝"
 
 .PHONY: all dev stop start clean fclean status \
 	logs-backend logs-frontend logs-postgres logs-vault \
+	lint lint-fix format format-check \
 	rebuild-backend rebuild-frontend rebuild-postgres \
 	shell-backend shell-frontend shell-postgres shell-vault help

@@ -7,45 +7,23 @@ data:
   vault-auto-unseal.sh: |
     #!/bin/sh
 
-    set -e
-
-    POD_NAME="${POD_NAME:-$(hostname)}"
     VAULT_ADDR="${VAULT_ADDR:-https://127.0.0.1:8200}"
     export VAULT_SKIP_VERIFY=1
 
-    echo "Auto-unseal starting for $POD_NAME"
+    echo "Starting vault auto-unseal service..."
 
     check_unseal_keys() {
-        if [ ! -f /vault/unseal/key-1 ] || [ ! -f /vault/unseal/key-2 ] || [ ! -f /vault/unseal/key-3 ]; then
-            echo "ERROR: Unseal keys not found"
-            return 1
-        fi
-        return 0
+        [ -f /vault/unseal/key-1 ] && [ -f /vault/unseal/key-2 ] && [ -f /vault/unseal/key-3 ]
     }
 
     is_sealed() {
         vault status -format=json 2>/dev/null | jq -r '.sealed' 2>/dev/null || echo "true"
     }
 
-    wait_for_vault() {
-        local max_attempts=30
-        local attempt=0
-
-        while [ $attempt -lt $max_attempts ]; do
-            vault status -format=json >/dev/null 2>&1
-            rc=$?
-            if [ "$rc" -eq 0 ] || [ "$rc" -eq 2 ]; then
-                return 0
-            fi
-            attempt=$((attempt + 1))
-            if [ $((attempt % 5)) -eq 1 ]; then
-                echo "Waiting for Vault... ($attempt/$max_attempts)"
-            fi
-            sleep 2
-        done
-
-        echo "ERROR: Vault not ready after $max_attempts attempts"
-        return 1
+    is_vault_ready() {
+        vault status -format=json >/dev/null 2>&1
+        rc=$?
+        [ "$rc" -eq 0 ] || [ "$rc" -eq 2 ]
     }
 
     unseal_vault() {
@@ -53,46 +31,29 @@ data:
             return 1
         fi
 
-        local sealed
-        sealed=$(is_sealed)
-
-        if [ "$sealed" = "false" ]; then
-            echo "Vault already unsealed"
+        if [ "$(is_sealed)" = "false" ]; then
             return 0
         fi
 
-        echo "Unsealing Vault..."
-        
+        echo "Unsealing vault..."
         for i in 1 2 3; do
             KEY=$(tr -d '\r\n' < "/vault/unseal/key-$i")
             vault operator unseal "$KEY" >/dev/null 2>&1 || true
         done
 
         sleep 1
-        sealed=$(is_sealed)
-        if [ "$sealed" = "false" ]; then
+        if [ "$(is_sealed)" = "false" ]; then
             echo "Vault unsealed successfully"
             return 0
-        else
-            echo "ERROR: Vault still sealed"
-            return 1
         fi
+        return 1
     }
 
-    monitor_and_unseal() {
-        while true; do
-            if wait_for_vault; then
-                unseal_vault || echo "Unseal failed, retrying..."
-            fi
+    echo "Waiting for vault to be ready and monitoring for seal status..."
 
-            sleep 30
-        done
-    }
-
-    echo "Initial unseal check..."
-    if wait_for_vault; then
-        unseal_vault || echo "Initial unseal failed, monitoring..."
-    fi
-
-    echo "Starting monitoring (30s intervals)..."
-    monitor_and_unseal
+    while true; do
+        if is_vault_ready; then
+            unseal_vault || true
+        fi
+        sleep 10
+    done

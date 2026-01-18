@@ -3,11 +3,9 @@ kind: Service
 metadata:
   name: frontend
   namespace: transcendence
-  labels:
-    app: frontend
 spec:
   ports:
-  - port: 8080
-    targetPort: 8080
+    - port: 8080
+      targetPort: 8080
   selector:
     app: frontend

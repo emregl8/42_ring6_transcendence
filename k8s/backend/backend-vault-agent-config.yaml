@@ -6,7 +6,7 @@ metadata:
 data:
   vault-agent-config.hcl: |
     exit_after_auth = false
-    pid_file = "/vault/secrets/pidfile"
+    pid_file = "/vault/internal/pidfile"
 
     auto_auth {
       method "kubernetes" {
@@ -18,14 +18,14 @@ data:
 
       sink "file" {
         config = {
-          path = "/vault/secrets/.vault-token"
+          path = "/vault/internal/.vault-token"
           mode = 0600
         }
       }
     }
 
     template {
-      source = "/vault/configs/database-template.tmpl"
+      source = "/vault/templates/database-template.tmpl"
       destination = "/vault/secrets/database.json"
       error_on_missing_key = true
       wait {
@@ -35,7 +35,7 @@ data:
     }
 
     template {
-      source = "/vault/configs/app-config-template.tmpl"
+      source = "/vault/templates/app-config-template.tmpl"
       destination = "/vault/secrets/app-config.json"
       error_on_missing_key = true
       wait {
@@ -56,23 +56,20 @@ metadata:
   namespace: transcendence
 data:
   database-template.tmpl: |
-    {{- with secret "secret/data/database/postgres" }}
+    {{- with secret "secret/data/database/postgres" -}}
     {
       "POSTGRES_USER": "{{ .Data.data.POSTGRES_USER }}",
       "POSTGRES_PASSWORD": "{{ .Data.data.POSTGRES_PASSWORD }}",
       "POSTGRES_DB": "{{ .Data.data.POSTGRES_DB }}"
     }
-    {{- end }}
+    {{- end -}}
 
   app-config-template.tmpl: |
-    {{- with secret "secret/data/application/config" }}
+    {{- with secret "secret/data/application/config" -}}
     {
-      "DB_HOST": "{{ .Data.data.DB_HOST }}",
-      "DB_PORT": "{{ .Data.data.DB_PORT }}",
-      "NODE_ENV": "{{ .Data.data.NODE_ENV }}",
-      "ALLOWED_ORIGINS": "{{ .Data.data.ALLOWED_ORIGINS }}",
-      "DB_SSL_ENABLED": "{{ .Data.data.DB_SSL_ENABLED }}",
-      "DB_SSL_REJECT_UNAUTHORIZED": "{{ .Data.data.DB_SSL_REJECT_UNAUTHORIZED }}",
-      "DB_SSL_CA_PATH": "{{ .Data.data.DB_SSL_CA_PATH }}"
+      "JWT_SECRET": "{{ .Data.data.JWT_SECRET }}",
+      "OAUTH_42_CLIENT_ID": "{{ .Data.data.OAUTH_42_CLIENT_ID }}",
+      "OAUTH_42_CLIENT_SECRET": "{{ .Data.data.OAUTH_42_CLIENT_SECRET }}",
+      "REFRESH_TOKEN_PEPPER": "{{ .Data.data.REFRESH_TOKEN_PEPPER }}"
     }
-    {{- end }}
+    {{- end -}}

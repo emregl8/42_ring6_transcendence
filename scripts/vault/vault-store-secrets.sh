@@ -1,25 +1,26 @@
 #!/bin/bash
 
-set -e
+set -Eeuo pipefail
 
 NAMESPACE="transcendence"
 VAULT_POD="vault-0"
 VAULT_KEYS_FILE=".vault-keys.json"
-ENV_FILE=".env"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+ENV_FILE="$PROJECT_ROOT/.env"
+
 source "${SCRIPT_DIR}/vault-helpers.sh"
 
 if [ ! -f "${ENV_FILE}" ]; then
-	echo "ERROR: .env file not found."
+	echo "ERROR: .env file not found at $ENV_FILE" >&2
 	exit 1
 fi
 
-VAULT_TOKEN=$(get_admin_token "${NAMESPACE}" "${VAULT_POD}" "${VAULT_KEYS_FILE}")
-if [ $? -ne 0 ]; then
-	echo "ERROR: Valid admin token not available."
+VAULT_TOKEN=$(get_admin_token "${NAMESPACE}" "${VAULT_POD}" "${VAULT_KEYS_FILE}") || {
+	echo "ERROR: Valid admin token not available." >&2
 	exit 1
-fi
+}
 
 parse_env_file() {
 	local file="$1"
@@ -35,28 +36,28 @@ DB_VARS=$(parse_env_file "${ENV_FILE}" | grep -E '^POSTGRES_')
 POSTGRES_USER=$(echo "$DB_VARS" | grep '^POSTGRES_USER=' | cut -d= -f2-)
 POSTGRES_PASSWORD=$(echo "$DB_VARS" | grep '^POSTGRES_PASSWORD=' | cut -d= -f2-)
 POSTGRES_DB=$(echo "$DB_VARS" | grep '^POSTGRES_DB=' | cut -d= -f2-)
+
+if [ -z "$POSTGRES_USER" ] || [ -z "$POSTGRES_PASSWORD" ] || [ -z "$POSTGRES_DB" ]; then
+	echo "ERROR: Missing required database variables in $ENV_FILE" >&2
+	exit 1
+fi
+
 vault_kv_put "${NAMESPACE}" "${VAULT_POD}" "${VAULT_TOKEN}" "secret/database/postgres" \
 	"POSTGRES_USER=\"${POSTGRES_USER}\"" \
 	"POSTGRES_PASSWORD=\"${POSTGRES_PASSWORD}\"" \
 	"POSTGRES_DB=\"${POSTGRES_DB}\""
 
 echo "Storing application configuration in Vault..."
-APP_VARS=$(parse_env_file "${ENV_FILE}" | grep -E '^(DB_HOST|DB_PORT|NODE_ENV|ALLOWED_ORIGINS|DB_SSL_ENABLED|DB_SSL_REJECT_UNAUTHORIZED|DB_SSL_CA_PATH)=')
-DB_HOST=$(echo "$APP_VARS" | grep '^DB_HOST=' | cut -d= -f2-)
-DB_PORT=$(echo "$APP_VARS" | grep '^DB_PORT=' | cut -d= -f2-)
-NODE_ENV=$(echo "$APP_VARS" | grep '^NODE_ENV=' | cut -d= -f2-)
-ALLOWED_ORIGINS=$(echo "$APP_VARS" | grep '^ALLOWED_ORIGINS=' | cut -d= -f2-)
-DB_SSL_ENABLED=$(echo "$APP_VARS" | grep '^DB_SSL_ENABLED=' | cut -d= -f2-)
-DB_SSL_REJECT_UNAUTHORIZED=$(echo "$APP_VARS" | grep '^DB_SSL_REJECT_UNAUTHORIZED=' | cut -d= -f2-)
-DB_SSL_CA_PATH=$(echo "$APP_VARS" | grep '^DB_SSL_CA_PATH=' | cut -d= -f2-)
+APP_VARS=$(parse_env_file "${ENV_FILE}" | grep -E '^(JWT_SECRET|OAUTH_42_CLIENT_ID|OAUTH_42_CLIENT_SECRET|REFRESH_TOKEN_PEPPER)=')
+JWT_SECRET=$(echo "$APP_VARS" | grep '^JWT_SECRET=' | cut -d= -f2-)
+OAUTH_42_CLIENT_ID=$(echo "$APP_VARS" | grep '^OAUTH_42_CLIENT_ID=' | cut -d= -f2-)
+OAUTH_42_CLIENT_SECRET=$(echo "$APP_VARS" | grep '^OAUTH_42_CLIENT_SECRET=' | cut -d= -f2-)
+REFRESH_TOKEN_PEPPER=$(echo "$APP_VARS" | grep '^REFRESH_TOKEN_PEPPER=' | cut -d= -f2-)
+
 vault_kv_put "${NAMESPACE}" "${VAULT_POD}" "${VAULT_TOKEN}" "secret/application/config" \
-	"DB_HOST=\"${DB_HOST}\"" \
-	"DB_PORT=\"${DB_PORT}\"" \
-	"NODE_ENV=\"${NODE_ENV}\"" \
-	"ALLOWED_ORIGINS=\"${ALLOWED_ORIGINS}\"" \
-	"DB_SSL_ENABLED=\"${DB_SSL_ENABLED}\"" \
-	"DB_SSL_REJECT_UNAUTHORIZED=\"${DB_SSL_REJECT_UZED}\"" \
-	"DB_SSL_CA_PATH=\"${DB_SSL_CA_PATH}\""
+	"JWT_SECRET=\"${JWT_SECRET}\"" \
+	"OAUTH_42_CLIENT_ID=\"${OAUTH_42_CLIENT_ID}\"" \
+	"OAUTH_42_CLIENT_SECRET=\"${OAUTH_42_CLIENT_SECRET}\"" \
+	"REFRESH_TOKEN_PEPPER=\"${REFRESH_TOKEN_PEPPER}\""
 
 echo "Secrets stored in Vault successfully!"
-NAUTHORI

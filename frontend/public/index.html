@@ -95,6 +95,25 @@
         .signup-link a:hover {
             text-decoration: underline;
         }
+        .oauth-button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 1rem;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+        .oauth-button:hover {
+            background-color: #0052a3;
+        }
     </style>
 </head>
 <body>
@@ -116,6 +135,8 @@
 
                 <button type="button">Sign in</button>
             </form>
+
+            <a href="/api/auth/login" class="oauth-button">Login with 42</a>
 
             <div class="signup-link">
                 Don't have an account? <a href="#">Sign up</a>

@@ -3,8 +3,6 @@ kind: StatefulSet
 metadata:
   name: postgres
   namespace: transcendence
-  labels:
-    app: postgres
 spec:
   serviceName: postgres
   replicas: 1
@@ -30,15 +28,19 @@ spec:
         - -c
         - >-
           set -euo pipefail;
-          for f in server.crt server.key ca.crt; do
-            if [ ! -f "/input/${f}" ]; then
-              echo "${f} missing";
-              exit 1;
-            fi;
-          done;
-          cp /input/server.crt /tls/;
-          cp /input/server.key /tls/;
-          cp /input/ca.crt /tls/;
+          if [ -f "/input/tls.crt" ]; then
+            cp /input/tls.crt /tls/server.crt;
+            cp /input/tls.key /tls/server.key;
+            if [ -f "/input/ca.crt" ]; then
+              cp /input/ca.crt /tls/ca.crt;
+            else
+              cp /input/tls.crt /tls/ca.crt;
+            fi
+          else
+            cp /input/server.crt /tls/server.crt;
+            cp /input/server.key /tls/server.key;
+            cp /input/ca.crt /tls/ca.crt;
+          fi;
           chown 999:999 /tls/server.crt /tls/server.key /tls/ca.crt;
           chmod 600 /tls/server.key;
           chmod 644 /tls/server.crt /tls/ca.crt
