@@ -22,7 +22,7 @@ POSTGRES_USER=$(printf '%s' "$DB_SECRETS" | jq -r '.data.data.POSTGRES_USER')
 POSTGRES_PASSWORD=$(printf '%s' "$DB_SECRETS" | jq -r '.data.data.POSTGRES_PASSWORD')
 POSTGRES_DB=$(printf '%s' "$DB_SECRETS" | jq -r '.data.data.POSTGRES_DB')
 
-echo "Creating Kubernetes Secret from Vault..."
+echo "Creating Kubernetes postgres-secret from Vault..."
 kubectl create secret generic postgres-secret \
 	--from-literal=POSTGRES_USER="${POSTGRES_USER}" \
 	--from-literal=POSTGRES_PASSWORD="${POSTGRES_PASSWORD}" \
@@ -30,4 +30,18 @@ kubectl create secret generic postgres-secret \
 	--namespace=${NAMESPACE} \
 	--dry-run=client -o yaml | kubectl apply -f - >/dev/null
 
-echo "Kubernetes Secret created successfully!"
+echo "Fetching application config from Vault..."
+APP_SECRETS=$(vault_kv_get "${NAMESPACE}" "${VAULT_POD}" "${VAULT_TOKEN}" "secret/application/config")
+REDIS_PASSWORD=$(printf '%s' "$APP_SECRETS" | jq -r '.data.data.REDIS_PASSWORD')
+
+if [ -z "$REDIS_PASSWORD" ] || [ "$REDIS_PASSWORD" = "null" ]; then
+    echo "Warning: REDIS_PASSWORD not found in Vault, skipping redis-secret creation."
+else
+    echo "Creating Kubernetes redis-secret from Vault..."
+    kubectl create secret generic redis-secret \
+        --from-literal=REDIS_PASSWORD="${REDIS_PASSWORD}" \
+        --namespace=${NAMESPACE} \
+        --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+fi
+
+echo "Kubernetes Secrets created successfully!"

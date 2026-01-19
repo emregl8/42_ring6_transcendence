@@ -8,6 +8,7 @@ echo "Generating secrets..."
 DB_PASSWORD=$(openssl rand -base64 32)
 JWT_SECRET=$(openssl rand -base64 48 | tr -d '\n')
 REFRESH_TOKEN_PEPPER=$(openssl rand -base64 48 | tr -d '\n')
+REDIS_PASSWORD=$(openssl rand -base64 32 | tr -d '\n')
 
 cat >.env <<EOF
 POSTGRES_USER=transcendence
@@ -20,6 +21,7 @@ OAUTH_42_CLIENT_SECRET=change_me
 JWT_SECRET=$JWT_SECRET
 
 REFRESH_TOKEN_PEPPER=$REFRESH_TOKEN_PEPPER
+REDIS_PASSWORD=$REDIS_PASSWORD
 EOF
 chmod 600 .env
 

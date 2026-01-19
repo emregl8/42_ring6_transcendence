@@ -11,14 +11,16 @@ stop:
 	@kubectl scale deployment/frontend --replicas=0 -n $(NAMESPACE) 2>/dev/null || true
 	@kubectl scale statefulset/postgres --replicas=0 -n $(NAMESPACE) 2>/dev/null || true
 	@kubectl scale statefulset/vault --replicas=0 -n $(NAMESPACE) 2>/dev/null || true
+	@kubectl scale statefulset/redis --replicas=0 -n $(NAMESPACE) 2>/dev/null || true
 	@$(MAKE) status
 
 start:
 	@kubectl scale statefulset/vault --replicas=1 -n $(NAMESPACE)
 	@sleep 10
+	@kubectl scale statefulset/postgres --replicas=1 -n $(NAMESPACE)
+	@kubectl scale statefulset/redis --replicas=1 -n $(NAMESPACE)
 	@kubectl scale deployment/backend --replicas=1 -n $(NAMESPACE)
 	@kubectl scale deployment/frontend --replicas=1 -n $(NAMESPACE)
-	@kubectl scale statefulset/postgres --replicas=1 -n $(NAMESPACE)
 	@$(MAKE) status
 
 status:
@@ -36,21 +38,18 @@ logs-postgres:
 logs-vault:
 	@kubectl logs -n $(NAMESPACE) -l app=vault --tail=100 -f
 
-lint:
-	@echo "Running lint..."
-	@cd backend && npm run lint
+logs-redis:
+	@kubectl logs -n $(NAMESPACE) -l app=redis --tail=100 -f
 
-lint-fix:
+fix:
+	@if [ ! -d "backend/node_modules" ]; then \
+		echo "Installing backend dependencies..."; \
+		cd backend && npm install; \
+	fi
 	@echo "Running lint fix..."
 	@cd backend && npm run lint:fix
-
-format:
 	@echo "Running prettier format..."
 	@cd backend && npm run format
-
-format-check:
-	@echo "Checking prettier format..."
-	@cd backend && npm run format:check
 
 rebuild-backend:
 	@echo "Rebuilding backend..."
@@ -109,7 +108,7 @@ clean:
 
 fclean: clean
 	@echo "Removing Docker images..."
-	@docker rmi transcendence-postgres:latest transcendence-backend:latest transcendence-frontend:latest 2>/dev/null || true
+	@docker rmi transcendence-postgres:latest transcendence-backend:latest transcendence-frontend:latest redis:7-alpine 2>/dev/null || true
 	@echo "Removing generated files..."
 	@rm -f .env .vault-keys.json
 	@echo "Removing node_modules..."
@@ -138,16 +137,14 @@ help:
 	@echo "║   make logs-frontend  - Stream frontend logs       ║"
 	@echo "║   make logs-postgres  - Stream postgres logs       ║"
 	@echo "║   make logs-vault     - Stream vault logs          ║"
+	@echo "║   make logs-redis     - Stream redis logs          ║"
 	@echo "║   make shell-backend  - Backend shell access       ║"
 	@echo "║   make shell-frontend - Frontend shell access      ║"
 	@echo "║   make shell-postgres - Postgres psql access       ║"
 	@echo "║   make shell-vault    - Vault shell access         ║"
 	@echo "╠════════════════════════════════════════════════════╣"
-	@echo "║ ✨ QUALITY & STYLE                                 ║"
-	@echo "║   make lint           - Run ESLint                 ║"
-	@echo "║   make lint-fix       - Run ESLint fix             ║"
-	@echo "║   make format         - Run Prettier format        ║"
-	@echo "║   make format-check   - Check Prettier format      ║"
+	@echo "║ ✨ QUALITY                                         ║"
+	@echo "║   make fix            - Lint fix + format          ║"
 	@echo "╠════════════════════════════════════════════════════╣"
 	@echo "║ 🧹 CLEANUP                                         ║"
 	@echo "║   make clean    - Delete namespace                 ║"
@@ -155,7 +152,6 @@ help:
 	@echo "╚════════════════════════════════════════════════════╝"
 
 .PHONY: all dev stop start clean fclean status \
-	logs-backend logs-frontend logs-postgres logs-vault \
-	lint lint-fix format format-check \
-	rebuild-backend rebuild-frontend rebuild-postgres \
+	logs-backend logs-frontend logs-postgres logs-vault logs-redis \
+	fix rebuild-backend rebuild-frontend rebuild-postgres \
 	shell-backend shell-frontend shell-postgres shell-vault help

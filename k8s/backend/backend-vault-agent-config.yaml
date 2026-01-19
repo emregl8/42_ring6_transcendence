@@ -70,6 +70,7 @@ data:
       "JWT_SECRET": "{{ .Data.data.JWT_SECRET }}",
       "OAUTH_42_CLIENT_ID": "{{ .Data.data.OAUTH_42_CLIENT_ID }}",
       "OAUTH_42_CLIENT_SECRET": "{{ .Data.data.OAUTH_42_CLIENT_SECRET }}",
-      "REFRESH_TOKEN_PEPPER": "{{ .Data.data.REFRESH_TOKEN_PEPPER }}"
+      "REFRESH_TOKEN_PEPPER": "{{ .Data.data.REFRESH_TOKEN_PEPPER }}",
+      "REDIS_PASSWORD": "{{ .Data.data.REDIS_PASSWORD }}"
     }
     {{- end -}}

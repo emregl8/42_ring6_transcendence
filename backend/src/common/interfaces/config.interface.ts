@@ -9,8 +9,6 @@ export interface ApplicationConfig {
   DB_PORT: number;
   NODE_ENV: 'production' | 'development';
 
-  ALLOWED_ORIGINS: string[];
-
   DB_SSL_ENABLED: boolean;
   DB_SSL_REJECT_UNAUTHORIZED: boolean;
   DB_SSL_CA_PATH?: string;
@@ -24,4 +22,11 @@ export interface ApplicationConfig {
   OAUTH_42_CLIENT_ID: string;
   OAUTH_42_CLIENT_SECRET: string;
   OAUTH_42_CALLBACK_URL: string;
+  ALLOWED_ORIGINS: string;
+
+  REDIS_HOST: string;
+  REDIS_PORT: number;
+  REDIS_PASSWORD: string;
+  REDIS_TLS_ENABLED: boolean;
+  REDIS_TLS_CA_PATH?: string;
 }

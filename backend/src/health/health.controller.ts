@@ -2,6 +2,7 @@ import { Controller, Get, HttpStatus, HttpException, Logger } from '@nestjs/comm
 import { ConfigService } from '@nestjs/config';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { RedisService } from '../redis/redis.service';
 import { HealthCheckResult, HealthCheckResponse } from './interfaces/health-check-result.interface';
 
 @Controller('health')
@@ -10,7 +11,8 @@ export class HealthController {
 
   constructor(
     @InjectDataSource() private readonly dataSource: DataSource,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly redisService: RedisService
   ) {}
 
   @Get()
@@ -23,6 +25,9 @@ export class HealthController {
 
     const vaultResult = await this.checkVault();
     results.push(vaultResult);
+
+    const redisResult = await this.checkRedis();
+    results.push(redisResult);
 
     const allHealthy = results.every((r) => r.status === 'ok');
 
@@ -39,6 +44,41 @@ export class HealthController {
     }
 
     return isDevelopment ? { status: 'ok', details: results } : { status: 'ok' };
+  }
+
+  private async checkRedis(): Promise<HealthCheckResult> {
+    const startTime = Date.now();
+    try {
+      const client = this.redisService.getClient();
+      const pong = await client.ping();
+
+      if (pong !== 'PONG') {
+        throw new Error('Redis ping failed');
+      }
+
+      return {
+        service: 'redis',
+        status: 'ok',
+        latency: Date.now() - startTime,
+      };
+    } catch (error) {
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const errorMessage = error instanceof Error ? error.message : 'Redis unavailable';
+
+      this.logger.error({
+        message: 'Redis health check failed',
+        service: 'redis',
+        type: 'REDIS_HEALTH_CHECK_FAILURE',
+        latency: Date.now() - startTime,
+        error: errorMessage,
+      });
+
+      return {
+        service: 'redis',
+        status: 'unhealthy',
+        error: isDevelopment ? errorMessage : 'Redis unavailable',
+      };
+    }
   }
 
   private async checkDatabase(): Promise<HealthCheckResult> {

@@ -58,3 +58,31 @@ spec:
     name: selfsigned-issuer
     kind: ClusterIssuer
     group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: redis-tls
+  namespace: transcendence
+spec:
+  secretName: redis-tls
+  duration: 2160h
+  renewBefore: 360h
+  commonName: redis.transcendence.svc
+  isCA: false
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+    - redis
+    - redis.transcendence
+    - redis.transcendence.svc
+    - redis.transcendence.svc.cluster.local
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io

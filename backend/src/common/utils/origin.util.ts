@@ -12,7 +12,9 @@ export function validateOrigin(origin: string): boolean {
 }
 
 export function parseAllowedOrigins(raw?: string): string[] {
-  if (raw === undefined || raw === null || raw.trim() === '') return [];
+  if (raw === undefined || raw === null || raw.trim() === '') {
+    return [];
+  }
   return raw
     .split(',')
     .map((o) => o.trim())

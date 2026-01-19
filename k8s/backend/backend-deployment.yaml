@@ -47,6 +47,33 @@ spec:
             limits:
               memory: "64Mi"
               cpu: "100m"
+        - name: wait-for-redis
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              timeout=120
+              elapsed=0
+              until nc -z redis.transcendence.svc.cluster.local 6379 || [ $elapsed -ge $timeout ]; do
+                sleep 2
+                elapsed=$((elapsed + 2))
+              done
+              [ $elapsed -ge $timeout ] && exit 1
+              exit 0
+          securityContext:
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "50m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"
         - name: vault-agent-init
           image: hashicorp/vault:1.21.1
           command:
@@ -159,6 +186,9 @@ spec:
             - name: postgres-ca
               mountPath: /etc/postgres-ca
               readOnly: true
+            - name: redis-ca
+              mountPath: /etc/redis-ca
+              readOnly: true
           env:
             - name: VAULT_SECRETS_PATH
               value: "/vault/secrets"
@@ -220,6 +250,13 @@ spec:
         - name: postgres-ca
           secret:
             secretName: postgres-tls
+            defaultMode: 0444
+            items:
+              - key: ca.crt
+                path: ca.crt
+        - name: redis-ca
+          secret:
+            secretName: redis-tls
             defaultMode: 0444
             items:
               - key: ca.crt

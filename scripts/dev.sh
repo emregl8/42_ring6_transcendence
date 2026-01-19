@@ -237,6 +237,14 @@ deploy_postgres() {
     fi
 }
 
+deploy_redis() {
+    echo "Deploying Redis..."
+    if ! kubectl apply -n "$NAMESPACE" -f k8s/redis/ >/dev/null; then
+        echo "ERROR: Failed to apply Redis manifests" >&2
+        return 1
+    fi
+}
+
 deploy_backend() {
     echo "Deploying Backend..."
     if ! kubectl apply -n "$NAMESPACE" -f k8s/backend/backend-configmap-dev.yaml >/dev/null; then
@@ -276,6 +284,7 @@ deploy() {
     deploy_cert_manager || return 1
     deploy_vault || return 1
     deploy_postgres || return 1
+    deploy_redis || return 1
     deploy_backend || return 1
     deploy_frontend || return 1
     deploy_security_and_ingress || return 1
@@ -346,8 +355,8 @@ dev() {
     deploy || return 1
     setup_vault || return 1
     initialize_database || return 1
-    echo "waiting for services to stabilize..."
-    sleep 10
+    echo "Waiting for services to stabilize..."
+    sleep 15
     echo "Access the application at:"
     echo "https://$DOMAIN"
 }

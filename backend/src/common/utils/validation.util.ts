@@ -3,5 +3,9 @@ export function isNullOrEmpty(value: unknown): value is null | undefined | '' {
 }
 
 export function isNotNullOrEmpty<T>(value: T | null | undefined): value is T {
-  return value !== null && value !== undefined && value !== '';
+  return value !== null && value !== undefined && value !== ('' as unknown as T);
+}
+
+export function isDefined<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined;
 }

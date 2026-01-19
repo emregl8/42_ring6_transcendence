@@ -14,3 +14,7 @@ data:
   JWT_EXPIRES_IN: "15m"
   OAUTH_42_CALLBACK_URL: "https://transcendence.local/api/auth/callback"
   REFRESH_TOKEN_TTL_DAYS: "7"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  REDIS_TLS_ENABLED: "true"
+  REDIS_TLS_CA_PATH: "/etc/redis-ca/ca.crt"
