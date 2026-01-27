@@ -1,68 +1,93 @@
 (function () {
   "use strict";
-
-  function showError(message) {
-    var errorMessage = document.getElementById("errorMessage");
-    if (!errorMessage) return;
-
-    errorMessage.textContent = message;
-    errorMessage.style.display = "block";
+  function renderHeaderUser(user) {
+    var usernameEl = document.getElementById("headerUsername");
+    var avatarEl = document.getElementById("headerAvatar");
+    if (usernameEl) usernameEl.textContent = user.username;
+    if (avatarEl) {
+      avatarEl.src =
+        user.avatar ||
+        "https://ui-avatars.com/api/?name=" +
+          user.username +
+          "&background=0D8ABC&color=fff&size=64";
+    }
   }
 
-  function renderUserInfo(user) {
-    var welcomeMessage = document.getElementById("welcomeMessage");
-    var userInfo = document.getElementById("userInfo");
-
-    if (!welcomeMessage || !userInfo) return;
-
-    if (typeof user.username !== "string") {
-      throw new Error("Invalid user payload");
+  function renderPost(post) {
+    var container = document.getElementById("postsContainer");
+    var postDiv = document.createElement("div");
+    postDiv.style.backgroundColor = "#ffffff";
+    postDiv.style.border = "1px solid #e0e0e0";
+    postDiv.style.borderRadius = "8px";
+    postDiv.style.padding = "1.5rem";
+    postDiv.style.cursor = "pointer";
+    postDiv.style.transition = "box-shadow 0.2s";
+    postDiv.onmouseover = function () {
+      this.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+    };
+    postDiv.onmouseout = function () {
+      this.style.boxShadow = "none";
+    };
+    postDiv.onclick = function () {
+      window.location.href = "/post.html?id=" + post.id;
+    };
+    var meta = document.createElement("div");
+    meta.style.marginBottom = "0.5rem";
+    meta.style.fontSize = "0.85rem";
+    meta.style.color = "#666";
+    var username = post.user ? post.user.username : "Unknown";
+    var date = new Date(post.createdAt).toLocaleDateString();
+    meta.textContent = username + " • " + date;
+    var title = document.createElement("h3");
+    title.style.fontSize = "1.4rem";
+    title.style.marginBottom = "0.5rem";
+    title.style.color = "#333";
+    title.textContent = post.title;
+    var contentPreview = document.createElement("div");
+    contentPreview.style.fontSize = "1rem";
+    contentPreview.style.lineHeight = "1.5";
+    contentPreview.style.color = "#555";
+    var tempDiv = document.createElement("div");
+    if (window.DOMPurify) {
+      tempDiv.innerHTML = DOMPurify.sanitize(post.content);
+    } else {
+      tempDiv.textContent = post.content;
     }
-
-    welcomeMessage.textContent = "Welcome, " + user.username + "!";
-
-    while (userInfo.firstChild) {
-      userInfo.removeChild(userInfo.firstChild);
+    var textContent = tempDiv.textContent || tempDiv.innerText || "";
+    if (textContent.length > 140) {
+      contentPreview.textContent = textContent.substring(0, 140) + "...";
+    } else {
+      contentPreview.textContent = textContent;
     }
+    postDiv.appendChild(meta);
+    postDiv.appendChild(title);
+    postDiv.appendChild(contentPreview);
+    container.appendChild(postDiv);
+  }
 
-    var fields = [
-      { label: "Username", value: user.username },
-      { label: "Email", value: user.email },
-      {
-        label: "Name",
-        value: (user.firstName || "") + " " + (user.lastName || ""),
-      },
-      { label: "42 ID", value: user.intra42Id },
-    ];
-
-    fields.forEach(function (field) {
-      var div = document.createElement("div");
-      var strong = document.createElement("strong");
-
-      strong.textContent = field.label + ": ";
-      div.appendChild(strong);
-      div.appendChild(document.createTextNode(field.value || "N/A"));
-
-      userInfo.appendChild(div);
-    });
+  function loadPosts() {
+    AuthClient.request("/api/content", {
+      headers: { Accept: "application/json" },
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error("Failed to load posts");
+        return res.json();
+      })
+      .then(function (posts) {
+        var container = document.getElementById("postsContainer");
+        container.innerHTML = "";
+        posts.forEach(renderPost);
+      })
+      .catch(function (err) {
+        console.error("Load posts error:", err);
+      });
   }
 
   function loadUserProfile() {
-    var controller =
-      typeof AbortController !== "undefined" ? new AbortController() : null;
-
-    var timeoutId = setTimeout(function () {
-      if (controller) controller.abort();
-      showError("Request timed out. Please refresh the page.");
-    }, 10000);
-
     AuthClient.request("/api/auth/me", {
       headers: { Accept: "application/json" },
-      signal: controller ? controller.signal : undefined,
     })
       .then(function (res) {
-        clearTimeout(timeoutId);
-
         if (!res || !res.ok) {
           throw new Error("Profile request failed");
         }
@@ -70,32 +95,17 @@
         return res.json();
       })
       .then(function (user) {
-        if (!user || typeof user !== "object") {
-          throw new Error("Invalid user data");
-        }
-
-        renderUserInfo(user);
-
+        renderHeaderUser(user);
+        loadPosts();
         if (AuthClient.startTokenRefresh) {
           AuthClient.startTokenRefresh();
         }
       })
       .catch(function (err) {
-        clearTimeout(timeoutId);
         console.error("User profile load error:", err);
-        showError(
-          "Failed to load user information. Please try refreshing the page."
-        );
       });
   }
-
   document.addEventListener("DOMContentLoaded", function () {
-    var logoutBtn = document.getElementById("logoutBtn");
-
-    if (logoutBtn && AuthClient.logout) {
-      logoutBtn.addEventListener("click", AuthClient.logout);
-    }
-
     loadUserProfile();
   });
 })();

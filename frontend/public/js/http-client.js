@@ -1,22 +1,21 @@
 (function () {
   "use strict";
-
   function normalizeOptions(options) {
     var opts = options ? Object.assign({}, options) : {};
-
     opts.credentials = "include";
-
     opts.headers = Object.assign(
       { Accept: "application/json" },
-      opts.headers || {}
+      opts.headers || {},
     );
-
+    var csrfToken = Utils.getCookie("XSRF-TOKEN");
+    if (csrfToken) {
+      opts.headers["X-XSRF-TOKEN"] = csrfToken;
+    }
     return opts;
   }
 
   function request(url, options) {
     var opts = normalizeOptions(options);
-
     return fetch(url, opts).catch(function (err) {
       console.error("Network error:", err);
       throw err;
@@ -32,7 +31,6 @@
   function post(url, options) {
     var opts = options ? Object.assign({}, options) : {};
     opts.method = "POST";
-
     if (
       opts.body &&
       typeof opts.body === "object" &&

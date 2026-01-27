@@ -1,14 +1,16 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { DatabaseCredentials, ApplicationConfig } from './common/interfaces/config.interface';
+import { CsrfMiddleware } from './common/middleware/csrf.middleware';
 import { parseEnvInt, parseEnvBool } from './common/utils/config.util';
 import { isDefined } from './common/utils/validation.util';
+import { ContentModule } from './content/content.module';
 import { DatabaseModule, DatabaseConfigService } from './database/database-config.service';
 import { HealthModule } from './health/health.module';
 import { RedisModule } from './redis/redis.module';
@@ -87,8 +89,13 @@ import { RedisModule } from './redis/redis.module';
     }),
 
     AuthModule,
+    ContentModule,
     HealthModule,
   ],
   providers: [AllExceptionsFilter],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(CsrfMiddleware).forRoutes('*');
+  }
+}

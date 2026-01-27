@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcendence - Profile</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9f9f9; color: #333; }
+        .header { background-color: #ffffff; padding: 1.5rem 2rem; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.8rem; color: #333; }
+        .nav-links a { color: #333; text-decoration: none; margin-left: 1.5rem; font-weight: 500; }
+        .container { max-width: 600px; margin: 3rem auto; padding: 0 2rem; }
+        
+        .profile-card { background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 3rem; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .avatar { width: 120px; height: 120px; background-color: #ddd; border-radius: 50%; margin: 0 auto 1.5rem; object-fit: cover; }
+        .username { font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem; color: #111; }
+        .email { color: #666; font-size: 1rem; margin-bottom: 2rem; }
+        
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem; border-top: 1px solid #eee; padding-top: 2rem; }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: #333; }
+        .stat-label { font-size: 0.9rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .details-list { text-align: left; margin-top: 2rem; }
+        .detail-item { padding: 1rem 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        .detail-label { font-weight: 500; color: #555; }
+        .detail-value { color: #333; }
+
+        .error-message { background-color: #fee; color: #c00; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; display: none; }
+        .logout-btn { background-color: #f44336; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 1rem; margin-top: 2rem; width: 100%; }
+        .logout-btn:hover { background-color: #d32f2f; }
+    </style>
+</head>
+<body>
+    <script src="/js/utils.js"></script>
+    <script src="/js/http-client.js"></script>
+    <script src="/js/token-manager.js"></script>
+    <script src="/js/auth-client.js"></script>
+    <script src="/js/purify.min.js"></script>
+
+    <div class="header">
+        <h1>42 LMS</h1>
+        <div class="nav-links">
+            <a href="/dashboard.html">Dashboard</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="error-message" id="errorMessage"></div>
+        <div class="profile-card" id="profileCard" style="display: none;">
+            <img src="" alt="Profile Avatar" class="avatar" id="avatar">
+            <h2 class="username" id="username"></h2>
+            <div class="email" id="email"></div>
+
+            <div class="details-list">
+                <div class="detail-item">
+                    <span class="detail-label">Full Name</span>
+                    <span class="detail-value" id="fullName"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">42 ID</span>
+                    <span class="detail-value" id="intraId"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Member Since</span>
+                    <span class="detail-value" id="joinedAt"></span>
+                </div>
+            </div>
+
+            <button class="logout-btn" id="logoutBtn">Logout</button>
+        </div>
+
+        <div id="myContentSection" style="max-width: 600px; margin: 3rem auto; display: none;">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e0e0e0;">My Content</h3>
+            <div id="myPostsList" style="display: grid; gap: 1rem;">
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/profile.js"></script>
+</body>
+</html>

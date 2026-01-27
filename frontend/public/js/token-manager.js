@@ -1,12 +1,10 @@
 (function () {
   "use strict";
-
   let refreshTimer = null;
   let refreshPromise = null;
 
   function refresh() {
     if (refreshPromise) return refreshPromise;
-
     refreshPromise = HttpClient.post("/api/auth/refresh", {
       headers: { Accept: "application/json" },
     })
@@ -42,20 +40,15 @@
       refreshTimer = null;
     }
   }
-
   function forceLogout() {
     stop();
-    fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include",
-      headers: { "X-Requested-With": "XMLHttpRequest" },
-    }).finally(function () {
+    if (window.AuthClient && window.AuthClient.logout) {
+      window.AuthClient.logout();
+    } else {
       window.location.replace("/");
-    });
+    }
   }
-
   window.addEventListener("beforeunload", stop);
-
   window.TokenManager = Object.freeze({
     refresh: refresh,
     start: start,

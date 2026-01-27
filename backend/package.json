@@ -9,7 +9,7 @@
     "start": "node dist/main.js",
     "dev": "ts-node src/main.ts",
     "start:prod": "node dist/main.js",
-    "format": "prettier --write \"src/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" \"../frontend/public/js/*.js\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix"
@@ -31,6 +31,7 @@
     "passport-jwt": "^4.0.1",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
+    "sanitize-html": "^2.17.0",
     "typeorm": "^0.3.28"
   },
   "devDependencies": {
@@ -38,6 +39,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.0.8",
     "@types/passport-jwt": "^4.0.1",
+    "@types/sanitize-html": "^2.16.0",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
     "eslint": "^9.39.2",
@@ -49,6 +51,7 @@
     "typescript": "^5.9.3"
   },
   "overrides": {
-    "diff": "^8.0.3"
+    "diff": "^8.0.3",
+    "lodash": "^4.17.23"
   }
 }

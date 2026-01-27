@@ -99,19 +99,29 @@
     </style>
 </head>
 <body>
+    <script src="/js/utils.js"></script>
     <script src="/js/http-client.js"></script>
     <script src="/js/token-manager.js"></script>
     <script src="/js/auth-client.js"></script>
+    <script src="/js/purify.min.js"></script>
     <div class="header">
         <h1>42 LMS</h1>
-        <button class="logout-btn" id="logoutBtn">Logout</button>
+        <div class="header-user" id="headerUser" style="display: flex; align-items: center; gap: 1rem;">
+            <a href="/profile" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #333; font-weight: 500;">
+                <span id="headerUsername">Loading...</span>
+                <img id="headerAvatar" src="" alt="" style="width: 32px; height: 32px; border-radius: 50%; background: #eee;">
+            </a>
+        </div>
     </div>
     <div class="container">
         <div class="error-message" id="errorMessage"></div>
-        <div class="user-info">
-            <h2 id="welcomeMessage">Welcome <span class="spinner"></span></h2>
-            <div class="user-details" id="userInfo">
-                <div>Loading user details...</div>
+
+        <div class="content-feed">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2 style="font-size: 1.5rem; color: #333;">Learning Feed</h2>
+                <a href="/create-post.html" style="background-color: #333; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 4px; font-weight: 500; font-size: 0.95rem;">Create Content</a>
+            </div>
+            <div id="postsContainer" style="display: grid; gap: 1rem;">
             </div>
         </div>
     </div>

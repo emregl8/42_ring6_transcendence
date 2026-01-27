@@ -4,3 +4,4 @@ k8s/postgres/postgres-secret.yaml
 *.crt
 *.pem
 .vault-keys.json
+**/node_modules/
