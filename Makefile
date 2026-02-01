@@ -114,6 +114,9 @@ fclean: clean
 	@rm -rf backend/node_modules frontend/node_modules .vault-keys.json
 	@echo "Full clean complete!"
 
+backup:
+	@./scripts/backup.sh
+
 help:
 	@echo "╔════════════════════════════════════════════════════╗"
 	@echo "║                 MAKEFILE COMMANDS                  ║"
@@ -130,6 +133,7 @@ help:
 	@echo "║   make rebuild-backend   - Rebuild backend         ║"
 	@echo "║   make rebuild-frontend  - Rebuild frontend        ║"
 	@echo "║   make rebuild-postgres  - Rebuild postgres        ║"
+	@echo "║   make backup            - Backup DB and Data      ║"
 	@echo "╠════════════════════════════════════════════════════╣"
 	@echo "║ 📋 LOGS & DEBUG                                    ║"
 	@echo "║   make logs-backend   - Stream backend logs        ║"
@@ -153,4 +157,4 @@ help:
 .PHONY: all dev stop start clean fclean status \
 	logs-backend logs-frontend logs-postgres logs-vault logs-redis \
 	fix rebuild-backend rebuild-frontend rebuild-postgres \
-	shell-backend shell-frontend shell-postgres shell-vault help
+	shell-backend shell-frontend shell-postgres shell-vault help backup
