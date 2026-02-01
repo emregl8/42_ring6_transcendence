@@ -29,6 +29,37 @@ In the 42 curriculum, there are various group projects that must be completed wi
 
 To be added...
 
+## Installation 🛠️
+
+### 1. Install Prerequisites
+```bash
+sudo apt install -y curl wget git openssl make npm docker.io
+```
+
+### 2. Install k3s
+```bash
+curl -sfL https://get.k3s.io | sh -
+mkdir -p ~/.kube
+sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+sudo chown $(id -u):$(id -g) ~/.kube/config
+echo 'export KUBECONFIG=$HOME/.kube/config' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### 3. Configure User Permissions
+```bash
+sudo usermod -aG docker $USER
+```
+> **Important:** You must restart your computer after running the command above for the changes to take effect.
+
 ## Usage ⚙️
 
-To be added...
+### Start the Server
+Run the following command to start the development server:
+```bash
+make dev
+```
+
+You can then access the application at: [https://transcendence.local](https://transcendence.local)
+
+> **Note:** Passwords and secrets are randomly generated each time the `.env` file is created.
