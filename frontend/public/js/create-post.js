@@ -4,7 +4,7 @@
     var titleInput = document.getElementById("postTitle");
     var contentInput = document.getElementById("postContent");
     var imageInput = document.getElementById("postImage");
-    var publishBtn = document.getElementById("publishBtn");
+    var publishBtn = document.getElementById("createPostBtn");
     var title = titleInput.value.trim();
     var content = contentInput.innerHTML.trim();
 
@@ -48,12 +48,12 @@
       .catch(function (err) {
         Utils.showError(err.message || "Failed to share content");
         publishBtn.disabled = false;
-        publishBtn.textContent = "Share Knowledge";
+        publishBtn.textContent = "Publish";
       });
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    var publishBtn = document.getElementById("publishBtn");
+    var publishBtn = document.getElementById("createPostBtn");
     if (publishBtn) {
       publishBtn.addEventListener("click", createPost);
     }

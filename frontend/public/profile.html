@@ -40,9 +40,10 @@
     <script src="/js/purify.min.js"></script>
 
     <div class="header">
-        <h1>42 LMS</h1>
-        <div class="nav-links">
-            <a href="/dashboard.html">Dashboard</a>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <h1><a href="/dashboard.html" style="color: #333; text-decoration: none;">42 LMS</a></h1>
+            <span style="color: #e0e0e0; font-size: 1.5rem;">|</span>
+            <a href="/my-content.html" style="color: #333; text-decoration: none; font-weight: 500;">My Content</a>
         </div>
     </div>
 
@@ -59,22 +60,12 @@
                     <span class="detail-value" id="fullName"></span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">42 ID</span>
-                    <span class="detail-value" id="intraId"></span>
-                </div>
-                <div class="detail-item">
                     <span class="detail-label">Member Since</span>
                     <span class="detail-value" id="joinedAt"></span>
                 </div>
             </div>
 
             <button class="logout-btn" id="logoutBtn">Logout</button>
-        </div>
-
-        <div id="myContentSection" style="max-width: 600px; margin: 3rem auto; display: none;">
-            <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e0e0e0;">My Content</h3>
-            <div id="myPostsList" style="display: grid; gap: 1rem;">
-            </div>
         </div>
     </div>
 

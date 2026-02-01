@@ -7,6 +7,10 @@
     var contentEl = document.getElementById("postContent");
     var imageEl = document.getElementById("postImage");
 
+    var metaContainer = document.getElementById("authorMetaContainer");
+    var authorAvatarEl = document.getElementById("authorAvatar");
+    var authorNameEl = document.getElementById("authorName");
+
     if (post.imageUrl) {
       imageEl.src = post.imageUrl;
       imageEl.style.display = "block";
@@ -15,15 +19,32 @@
     }
 
     titleEl.textContent = post.title;
-    var username = post.user ? post.user.username : "Unknown";
-    var date = new Date(post.createdAt).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
+
+    var dateStr = new Date(post.createdAt).toLocaleDateString("en-US", {
+      month: "short",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+      year: "numeric",
     });
-    metaEl.textContent = "Written by " + username + " on " + date;
+
+    if (post.user) {
+      metaContainer.style.display = "flex";
+      authorNameEl.textContent = post.user.firstName
+        ? post.user.firstName + " " + (post.user.lastName || "")
+        : post.user.username;
+      authorAvatarEl.src =
+        post.user.avatar ||
+        "https://ui-avatars.com/api/?name=" +
+          post.user.username +
+          "&background=0D8ABC&color=fff&size=128";
+
+      var timeStr = new Date(post.createdAt).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      metaEl.innerHTML =
+        dateStr + ' <span class="dot-separator"></span> Created at ' + timeStr;
+    }
+
     if (window.DOMPurify) {
       contentEl.innerHTML = DOMPurify.sanitize(post.content, {
         ADD_TAGS: ["img"],

@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   UseGuards,
   Req,
@@ -145,6 +146,11 @@ export class ContentController implements OnModuleInit {
       imageUrl = await this.processImage(file.filename);
     }
     return this.contentService.update(id, updatePostDto, req.user, imageUrl);
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string, @Req() req: AuthenticatedRequest): Promise<void> {
+    return this.contentService.remove(id, req.user);
   }
 
   @Post('upload')

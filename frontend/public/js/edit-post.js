@@ -42,7 +42,7 @@
     var titleInput = document.getElementById("postTitle");
     var contentInput = document.getElementById("postContent");
     var imageInput = document.getElementById("postImage");
-    var saveBtn = document.getElementById("saveBtn");
+    var saveBtn = document.getElementById("updatePostBtn");
     var title = titleInput.value.trim();
     var content = contentInput.innerHTML.trim();
     if (!title || !content || content === "<br>") {
@@ -71,7 +71,7 @@
         return res.json();
       })
       .then(function (post) {
-        window.location.href = "/profile";
+        window.location.href = "/my-content.html";
       })
       .catch(function (err) {
         Utils.showError(err.message || "Failed to update content");
@@ -81,7 +81,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    var saveBtn = document.getElementById("saveBtn");
+    var saveBtn = document.getElementById("updatePostBtn");
     if (saveBtn) {
       saveBtn.addEventListener("click", savePost);
     }

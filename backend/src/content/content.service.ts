@@ -74,6 +74,17 @@ export class ContentService {
     return this.postsRepository.save(post);
   }
 
+  async remove(id: string, user: User): Promise<void> {
+    const post = await this.findOne(id);
+    if (post === null) {
+      throw new NotFoundException('Post not found');
+    }
+    if (post.user.id !== user.id) {
+      throw new ForbiddenException('You can only delete your own posts');
+    }
+    await this.postsRepository.remove(post);
+  }
+
   private sanitizeTitle(title: string): string {
     return sanitizeHtml(title, {
       allowedTags: [],

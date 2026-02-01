@@ -38,10 +38,13 @@
     <script src="/js/purify.min.js"></script>
 
     <div class="header">
-        <h1>Edit Content</h1>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <h1><a href="/dashboard.html" style="color: #333; text-decoration: none;">42 LMS</a></h1>
+            <span style="color: #e0e0e0; font-size: 1.5rem;">|</span>
+            <a href="/my-content.html" style="color: #333; text-decoration: none; font-weight: 500;">My Content</a>
+        </div>
         <div>
-            <a href="/profile" class="btn-link">Cancel</a>
-            <button class="btn-primary" id="saveBtn">Save Changes</button>
+            <button id="updatePostBtn" class="btn-primary">Save Changes</button>
         </div>
     </div>
 

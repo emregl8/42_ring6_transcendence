@@ -11,11 +11,60 @@
         .header h1 { font-size: 1.8rem; color: #333; }
         .container { max-width: 700px; margin: 3rem auto; padding: 0 2rem; }
         .post-header { margin-bottom: 2rem; }
-        .post-title { font-size: 2.5rem; font-weight: bold; margin-bottom: 1rem; line-height: 1.2; }
-        .post-meta { color: #666; font-size: 0.9rem; }
-        .post-content { font-size: 1.2rem; line-height: 1.6; color: #292929; }
-        .post-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 1rem 0; display: block; }
-        .post-content p { margin-bottom: 1rem; }
+        .post-title { font-size: 2.5rem; font-weight: bold; margin-bottom: 1.5rem; line-height: 1.2; letter-spacing: -0.02em; color: #292929; }
+        .post-content { font-size: 1.25rem; line-height: 1.6; color: #292929; font-family: source-serif-pro, Georgia, Cambria, "Times New Roman", Times, serif; }
+        .post-content img { max-width: 100%; height: auto; border-radius: 4px; margin: 2rem 0; display: block; }
+        .post-content p { margin-bottom: 1.5rem; }
+        
+        .container {
+            max-width: 720px;
+            margin: 4rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .author-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 2.5rem;
+        }
+        
+        .author-meta-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            background-color: #f0f0f0;
+        }
+        
+        .author-meta-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .author-meta-name {
+            font-weight: 400;
+            font-size: 1rem;
+            color: #292929;
+            text-decoration: none;
+        }
+        
+        .author-meta-date {
+            font-size: 0.875rem;
+            color: #757575;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .dot-separator::before {
+            content: "·";
+            margin: 0 0.1rem;
+        }
+
+        .btn-delete { background-color: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+        .btn-delete:hover { background-color: #c82333; }
         .error-message { background-color: #fee; color: #c00; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; display: none; }
         .back-link { display: inline-block; margin-bottom: 2rem; color: #666; text-decoration: none; }
         .back-link:hover { color: #333; }
@@ -29,19 +78,29 @@
     <script src="/js/purify.min.js"></script>
 
     <div class="header">
-        <h1>42 LMS</h1>
-        <a href="/dashboard.html" style="color: #333; text-decoration: none;">Dashboard</a>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <h1><a href="/dashboard.html" style="color: #333; text-decoration: none;">42 LMS</a></h1>
+            <span style="color: #e0e0e0; font-size: 1.5rem;">|</span>
+            <a href="/my-content.html" style="color: #333; text-decoration: none; font-weight: 500;">My Content</a>
+        </div>
     </div>
 
     <div class="container">
-        <a href="/dashboard.html" class="back-link">← Back to Dashboard</a>
         <div class="error-message" id="errorMessage"></div>
         
         <div id="postContainer" style="display: none;">
             <div class="post-header">
-                <img id="postImage" src="" alt="Cover Image" style="max-width: 100%; height: auto; display: none; margin-bottom: 2rem; border-radius: 8px;">
                 <h1 class="post-title" id="postTitle">Loading...</h1>
-                <div class="post-meta" id="postMeta"></div>
+                
+                <div class="author-meta" id="authorMetaContainer" style="display: none;">
+                    <img id="authorAvatar" class="author-meta-avatar" src="" alt="Author">
+                    <div class="author-meta-info">
+                        <span class="author-meta-name" id="authorName"></span>
+                        <span class="author-meta-date" id="postMeta"></span>
+                    </div>
+                </div>
+
+                <img id="postImage" src="" alt="Cover Image" style="max-width: 100%; height: auto; display: none; margin-bottom: 2rem; border-radius: 8px;">
             </div>
             <div class="post-content" id="postContent"></div>
         </div>
