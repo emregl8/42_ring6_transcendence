@@ -1,5 +1,5 @@
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import {
   Controller,
   Get,
@@ -51,6 +51,13 @@ const storage = diskStorage({
   },
 });
 
+const multerOptions = {
+  storage,
+  limits: {
+    fileSize: 1024 * 1024 * 5,
+  },
+};
+
 @Controller('content')
 @UseGuards(AuthGuard('jwt'))
 export class ContentController implements OnModuleInit {
@@ -92,7 +99,7 @@ export class ContentController implements OnModuleInit {
 
   @Post()
   @UseGuards(PostRateLimitGuard)
-  @UseInterceptors(FileInterceptor('image', { storage }))
+  @UseInterceptors(FileInterceptor('image', multerOptions))
   async create(
     @Body() createPostDto: CreatePostDto,
     @Req() req: AuthenticatedRequest,
@@ -143,7 +150,7 @@ export class ContentController implements OnModuleInit {
 
   @Patch(':id')
   @UseGuards(PostRateLimitGuard)
-  @UseInterceptors(FileInterceptor('image', { storage }))
+  @UseInterceptors(FileInterceptor('image', multerOptions))
   async update(
     @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,
@@ -167,7 +174,7 @@ export class ContentController implements OnModuleInit {
 
   @Post('upload')
   @UseGuards(PostRateLimitGuard)
-  @UseInterceptors(FileInterceptor('file', { storage }))
+  @UseInterceptors(FileInterceptor('file', multerOptions))
   async uploadImage(
     @UploadedFile(
       new ParseFilePipe({

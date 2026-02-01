@@ -1,6 +1,6 @@
 export function parseBoolean(value: unknown, fieldName?: string): boolean {
   const errorMessage =
-    fieldName !== null && fieldName !== undefined && fieldName !== ''
+    fieldName !== undefined && fieldName !== null && fieldName !== ''
       ? `Failed to parse ${fieldName} as boolean`
       : 'Failed to parse value as boolean';
 
@@ -8,40 +8,24 @@ export function parseBoolean(value: unknown, fieldName?: string): boolean {
     return value;
   }
 
-  if (typeof value === 'number') {
-    if (value === 0) {
-      return false;
-    }
-    if (value === 1) {
-      return true;
-    }
-    throw new Error(`${errorMessage}: number must be 0 or 1`);
-  }
-
-  if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase();
-    if (['true', '1', 'yes'].includes(normalized)) {
-      return true;
-    }
-    if (['false', '0', 'no'].includes(normalized)) {
-      return false;
-    }
-    throw new Error(`${errorMessage}: invalid string value "${value}"`);
-  }
-
-  const stringValue = String(value ?? '')
-    .trim()
-    .toLowerCase();
-  if (stringValue === '' || stringValue === 'null' || stringValue === 'undefined') {
+  if (value === null || value === undefined || value === '') {
     throw new Error(`${errorMessage}: value is null, undefined, or empty`);
   }
 
-  if (['true', '1', 'yes'].includes(stringValue)) {
+  if (typeof value === 'object') {
+    throw new Error(`${errorMessage}: objects cannot be parsed as boolean`);
+  }
+
+  const str = String(value).trim().toLowerCase();
+  const truthy = ['true', '1', 'yes'];
+  const falsy = ['false', '0', 'no'];
+
+  if (truthy.includes(str)) {
     return true;
   }
-  if (['false', '0', 'no'].includes(stringValue)) {
+  if (falsy.includes(str)) {
     return false;
   }
 
-  throw new Error(`${errorMessage}: unsupported type or value`);
+  throw new Error(`${errorMessage}: unsupported value "${str}"`);
 }

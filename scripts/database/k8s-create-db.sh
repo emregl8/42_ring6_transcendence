@@ -33,7 +33,7 @@ POSTGRES_DB=$(kubectl get secret postgres-secret -n "$NAMESPACE" -o jsonpath='{.
     exit 1
 }
 
-if [ -z "$POSTGRES_USER" ] || [ -z "$POSTGRES_PASSWORD" ] || [ -z "$POSTGRES_DB" ]; then
+if [[ -z "$POSTGRES_USER" ]] || [[ -z "$POSTGRES_PASSWORD" ]] || [[ -z "$POSTGRES_DB" ]]; then
     echo "ERROR: Database credentials are empty" >&2
     exit 1
 fi

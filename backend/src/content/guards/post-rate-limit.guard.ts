@@ -12,7 +12,7 @@ export class PostRateLimitGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const user = request.user as User | undefined;
-    if (user === undefined || user === null || user.id === undefined) {
+    if (user?.id === undefined) {
       return true;
     }
     const key = REDIS_KEYS.postRateLimit(user.id);

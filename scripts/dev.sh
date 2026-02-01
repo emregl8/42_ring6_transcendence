@@ -44,7 +44,7 @@ check_prerequisites() {
         missing=1
     fi
 
-    if [ $missing -eq 1 ]; then
+    if [[ $missing -eq 1 ]]; then
         return 1
     fi
 
@@ -83,12 +83,12 @@ create_data_directories() {
 }
 
 generate_env() {
-    if [ -f "$ENV_FILE" ]; then
+    if [[ -f "$ENV_FILE" ]]; then
         echo ".env file already exists at $ENV_FILE. Skipping generation."
         return
     fi
 
-    if [ ! -f "$SCRIPT_DIR/generate-env.sh" ]; then
+    if [[ ! -f "$SCRIPT_DIR/generate-env.sh" ]]; then
         echo "ERROR: generate-env.sh not found at $SCRIPT_DIR/generate-env.sh" >&2
         return 1
     fi
@@ -345,7 +345,7 @@ initialize_database() {
 cleanup_stale_namespace() {
     if kubectl get ns "$NAMESPACE" &>/dev/null; then
         PHASE=$(kubectl get ns "$NAMESPACE" -o jsonpath='{.status.phase}' 2>/dev/null)
-        if [ "$PHASE" = "Terminating" ]; then
+        if [[ "$PHASE" == "Terminating" ]]; then
             echo "Cleaning up stale terminating namespace..."
             kubectl get pvc -n "$NAMESPACE" -o name 2>/dev/null | xargs -I {} \
                 kubectl patch {} -n "$NAMESPACE" -p '{"metadata":{"finalizers":[]}}' --type=merge 2>/dev/null || true

@@ -2,8 +2,8 @@
   "use strict";
 
   function renderPost(post) {
-    var container = document.getElementById("postsContainer");
-    var postDiv = document.createElement("div");
+    const container = document.getElementById("postsContainer");
+    const postDiv = document.createElement("div");
     postDiv.style.backgroundColor = "#ffffff";
     postDiv.style.border = "1px solid #e0e0e0";
     postDiv.style.borderRadius = "8px";
@@ -17,11 +17,11 @@
       this.style.boxShadow = "none";
     };
     postDiv.onclick = function () {
-      window.location.href = "/post.html?id=" + post.id;
+      globalThis.location.href = "/post.html?id=" + post.id;
     };
 
     if (post.imageUrl) {
-      var img = document.createElement("img");
+      const img = document.createElement("img");
       img.src = post.imageUrl;
       img.style.width = "100%";
       img.style.height = "200px";
@@ -31,32 +31,32 @@
       postDiv.appendChild(img);
     }
 
-    var meta = document.createElement("div");
+    const meta = document.createElement("div");
     meta.style.marginBottom = "0.5rem";
     meta.style.fontSize = "0.85rem";
     meta.style.color = "#666";
-    var username = post.user ? post.user.username : "Unknown";
-    var date = new Date(post.createdAt).toLocaleDateString();
+    const username = post.user ? post.user.username : "Unknown";
+    const date = new Date(post.createdAt).toLocaleDateString();
     meta.textContent = username + " • " + date;
-    var title = document.createElement("h3");
+    const title = document.createElement("h3");
     title.style.fontSize = "1.4rem";
     title.style.marginBottom = "0.5rem";
     title.style.color = "#333";
     title.textContent = post.title;
-    var contentPreview = document.createElement("div");
+    const contentPreview = document.createElement("div");
     contentPreview.style.fontSize = "1rem";
     contentPreview.style.lineHeight = "1.5";
     contentPreview.style.color = "#555";
-    var tempDiv = document.createElement("div");
-    if (window.DOMPurify) {
-      tempDiv.innerHTML = DOMPurify.sanitize(post.content, {
+    const tempDiv = document.createElement("div");
+    if (globalThis.DOMPurify) {
+      tempDiv.innerHTML = globalThis.DOMPurify.sanitize(post.content, {
         ADD_TAGS: ["img"],
         ADD_ATTR: ["src", "alt", "width", "height"],
       });
     } else {
       tempDiv.textContent = post.content;
     }
-    var textContent = tempDiv.textContent || tempDiv.innerText || "";
+    const textContent = tempDiv.textContent || tempDiv.innerText || "";
     if (textContent.length > 140) {
       contentPreview.textContent = textContent.substring(0, 140) + "...";
     } else {
@@ -77,7 +77,7 @@
         return res.json();
       })
       .then(function (posts) {
-        var container = document.getElementById("postsContainer");
+        const container = document.getElementById("postsContainer");
         container.innerHTML = "";
         posts.forEach(renderPost);
       })

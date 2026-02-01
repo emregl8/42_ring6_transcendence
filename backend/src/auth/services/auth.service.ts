@@ -1,4 +1,4 @@
-import { randomBytes, createHmac } from 'crypto';
+import { randomBytes, createHmac } from 'node:crypto';
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -70,7 +70,7 @@ export class AuthService {
       if (!['cdn.intra.42.fr', 'profile.intra.42.fr', 'api.intra.42.fr'].includes(url.hostname)) {
         return undefined;
       }
-      return `${url.origin}${encodeURI((url.pathname !== '' ? url.pathname : '') + (url.search !== '' ? url.search : ''))}`;
+      return `${url.origin}${encodeURI(url.pathname + url.search)}`;
     } catch {
       return undefined;
     }
@@ -95,7 +95,7 @@ export class AuthService {
         .execute();
 
       const user = await this.userRepository.findOne({ where: { intra42Id: profile.intra42Id } });
-      if (!isDefined(user)) {
+      if (user === null || user === undefined) {
         throw new Error('Failed to load user after upsert');
       }
 
@@ -211,13 +211,13 @@ export class AuthService {
     let user: User | null = null;
     let existingToken: RefreshToken | null = null;
 
-    if (isDefined(cachedData) && !cachedData.revoked) {
+    if (isDefined(cachedData) && cachedData.revoked === false) {
       user = await this.findUserById(cachedData.userId);
     }
 
-    if (!isDefined(user)) {
+    if (user === null || user === undefined) {
       existingToken = await this.refreshTokenRepository.findOne({ where: { tokenHash: providedHash }, relations: ['user'] });
-      if (!isDefined(existingToken)) {
+      if (existingToken === null || existingToken === undefined) {
         throw new UnauthorizedException('Invalid refresh token');
       }
       if (existingToken.revoked) {
@@ -229,14 +229,14 @@ export class AuthService {
       user = existingToken.user;
     }
 
-    if (!isDefined(user)) {
+    if (user === null || user === undefined) {
       throw new UnauthorizedException('Invalid refresh token state');
     }
 
     const { token: newRaw } = await this.createRefreshToken(user, clientIp, userAgent);
     const newHash = this.hashToken(newRaw);
 
-    if (!isDefined(existingToken)) {
+    if (existingToken === null || existingToken === undefined) {
       await this.refreshTokenRepository.update({ tokenHash: providedHash }, { revoked: true, replacedBy: newHash });
     } else {
       existingToken.revoked = true;

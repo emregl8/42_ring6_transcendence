@@ -2,7 +2,7 @@
   "use strict";
 
   function renderPosts(posts) {
-    var container = document.getElementById("postsContainer");
+    const container = document.getElementById("postsContainer");
     container.innerHTML = "";
 
     if (posts.length === 0) {
@@ -12,18 +12,18 @@
     }
 
     posts.forEach(function (post) {
-      var card = document.createElement("div");
+      const card = document.createElement("div");
       card.className = "post-card";
 
-      var infoDiv = document.createElement("div");
+      const infoDiv = document.createElement("div");
       infoDiv.className = "post-info";
 
-      var titleLink = document.createElement("a");
+      const titleLink = document.createElement("a");
       titleLink.href = "/post.html?id=" + post.id;
       titleLink.className = "post-title";
       titleLink.textContent = post.title;
 
-      var date = new Date(post.createdAt).toLocaleDateString("en-US", {
+      const date = new Date(post.createdAt).toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -31,22 +31,22 @@
         minute: "2-digit",
       });
 
-      var meta = document.createElement("div");
+      const meta = document.createElement("div");
       meta.className = "post-meta";
       meta.textContent = "Posted on " + date;
 
       infoDiv.appendChild(titleLink);
       infoDiv.appendChild(meta);
 
-      var actionsDiv = document.createElement("div");
+      const actionsDiv = document.createElement("div");
       actionsDiv.className = "post-actions";
 
-      var editBtn = document.createElement("a");
+      const editBtn = document.createElement("a");
       editBtn.href = "/editor.html?id=" + post.id;
       editBtn.className = "btn-action btn-edit";
       editBtn.textContent = "Edit";
 
-      var deleteBtn = document.createElement("button");
+      const deleteBtn = document.createElement("button");
       deleteBtn.className = "btn-action btn-delete";
       deleteBtn.textContent = "Delete";
       deleteBtn.onclick = function () {

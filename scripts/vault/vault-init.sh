@@ -8,9 +8,9 @@ NAMESPACE="transcendence"
 PODS=("vault-0")
 VAULT_KEYS_FILE=".vault-keys.json"
 
-if [ -f "${VAULT_KEYS_FILE}" ]; then
+if [[ -f "${VAULT_KEYS_FILE}" ]]; then
 	CURRENT_PERM=$(stat -c '%a' "${VAULT_KEYS_FILE}" 2>/dev/null || stat -f '%A' "${VAULT_KEYS_FILE}" 2>/dev/null)
-	if [ "$CURRENT_PERM" != "600" ]; then
+	if [[ "$CURRENT_PERM" != "600" ]]; then
 		echo "ERROR: ${VAULT_KEYS_FILE} has insecure permissions ($CURRENT_PERM). Setting to 600..."
 		chmod 600 "${VAULT_KEYS_FILE}"
 	fi
@@ -30,7 +30,7 @@ get_json_value() {
 	jq -r "$field" "${VAULT_KEYS_FILE}" 2>/dev/null | tr -d '\r\n'
 }
 
-if [ "$INIT_STATUS" = "true" ] && [ ! -f "${VAULT_KEYS_FILE}" ]; then
+if [[ "$INIT_STATUS" == "true" ]] && [[ ! -f "${VAULT_KEYS_FILE}" ]]; then
 	echo "ERROR: Vault is initialized but keys file is missing!"
 	exit 1
 fi
@@ -46,7 +46,7 @@ UNSEAL_KEY_1=$(get_json_value '.unseal_keys_b64[0] // empty')
 UNSEAL_KEY_2=$(get_json_value '.unseal_keys_b64[1] // empty')
 UNSEAL_KEY_3=$(get_json_value '.unseal_keys_b64[2] // empty')
 
-if [ -n "$UNSEAL_KEY_1" ] && [ -n "$UNSEAL_KEY_2" ] && [ -n "$UNSEAL_KEY_3" ]; then
+if [[ -n "$UNSEAL_KEY_1" ]] && [[ -n "$UNSEAL_KEY_2" ]] && [[ -n "$UNSEAL_KEY_3" ]]; then
 	TMP_UNSEAL_DIR=$(mktemp -d)
 	chmod 700 "$TMP_UNSEAL_DIR"
 	printf '%s' "$UNSEAL_KEY_1" >"$TMP_UNSEAL_DIR/key-1"
@@ -64,7 +64,7 @@ if [ -n "$UNSEAL_KEY_1" ] && [ -n "$UNSEAL_KEY_2" ] && [ -n "$UNSEAL_KEY_3" ]; t
 	rm -rf "$TMP_UNSEAL_DIR"
 fi
 
-if [ -z "$UNSEAL_KEY_1" ] || [ -z "$UNSEAL_KEY_2" ] || [ -z "$UNSEAL_KEY_3" ]; then
+if [[ -z "$UNSEAL_KEY_1" ]] || [[ -z "$UNSEAL_KEY_2" ]] || [[ -z "$UNSEAL_KEY_3" ]]; then
 	echo "ERROR: Unseal keys not found in ${VAULT_KEYS_FILE}!"
 	exit 1
 fi
@@ -73,7 +73,7 @@ exec_vault "${NAMESPACE}" "${PODS[0]}" "VAULT_CACERT=/vault/tls/ca.crt vault ope
 exec_vault "${NAMESPACE}" "${PODS[0]}" "VAULT_CACERT=/vault/tls/ca.crt vault operator unseal '$UNSEAL_KEY_2'" >/dev/null
 exec_vault "${NAMESPACE}" "${PODS[0]}" "VAULT_CACERT=/vault/tls/ca.crt vault operator unseal '$UNSEAL_KEY_3'" >/dev/null
 
-if [ -z "$ROOT_TOKEN" ]; then
+if [[ -z "$ROOT_TOKEN" ]]; then
 	echo "ERROR: Root token not found in ${VAULT_KEYS_FILE}!"
 	exit 1
 fi
@@ -126,14 +126,14 @@ EOF"
 
 ADMIN_TOKEN_RESPONSE=$(exec_vault_with_token "${NAMESPACE}" "${PODS[0]}" "$ROOT_TOKEN" "vault token create -orphan -policy=admin-policy -period=30m -display-name='vault-admin-token' -format=json" 2>/dev/null)
 
-if [ $? -ne 0 ]; then
+if [[ $? -ne 0 ]]; then
 	echo "ERROR: Failed to create admin token!"
 	exit 1
 fi
 
 ADMIN_TOKEN=$(echo "$ADMIN_TOKEN_RESPONSE" | jq -r '.auth.client_token')
 
-if [ -z "$ADMIN_TOKEN" ] || [ "$ADMIN_TOKEN" = "null" ]; then
+if [[ -z "$ADMIN_TOKEN" ]] || [[ "$ADMIN_TOKEN" == "null" ]]; then
 	echo "ERROR: Admin token creation failed!"
 	exit 1
 fi

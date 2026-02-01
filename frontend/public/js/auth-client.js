@@ -1,7 +1,7 @@
 (function () {
   "use strict";
-  var refreshPromise = null;
-  var MAX_RETRY = 1;
+  let refreshPromise = null;
+  const MAX_RETRY = 1;
 
   function refreshOnce() {
     if (!refreshPromise) {
@@ -29,7 +29,7 @@
       if (options._retryCount >= MAX_RETRY) {
         forceLogout();
 
-        return Promise.reject(new Error("Unauthorized"));
+        throw new Error("Unauthorized");
       }
 
       options._retryCount++;
@@ -49,11 +49,11 @@
   function forceLogout() {
     TokenManager.stop();
 
-    var headers = {
+    const headers = {
       "X-Requested-With": "XMLHttpRequest",
     };
 
-    var csrfToken = Utils.getCookie("XSRF-TOKEN");
+    const csrfToken = Utils.getCookie("XSRF-TOKEN");
 
     if (csrfToken) {
       headers["X-XSRF-TOKEN"] = csrfToken;
@@ -65,7 +65,7 @@
     })
       .catch(function (err) {})
       .finally(function () {
-        window.location.replace("/");
+        globalThis.location.replace("/");
       });
   }
 
@@ -80,8 +80,8 @@
         return res.json();
       })
       .then(function (user) {
-        var usernameEl = document.getElementById("headerUsername");
-        var avatarEl = document.getElementById("headerAvatar");
+        const usernameEl = document.getElementById("headerUsername");
+        const avatarEl = document.getElementById("headerAvatar");
         if (usernameEl) usernameEl.textContent = user.username;
         if (avatarEl) {
           avatarEl.src = user.avatar || "/img/default-avatar.png";
@@ -96,7 +96,7 @@
       });
   }
 
-  window.AuthClient = Object.freeze({
+  globalThis.AuthClient = Object.freeze({
     request: authenticatedRequest,
     logout: forceLogout,
     startTokenRefresh: TokenManager.start,

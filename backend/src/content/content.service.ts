@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import sanitizeHtml from 'sanitize-html';
 import { Repository } from 'typeorm';
 import { User } from '../auth/entities/user.entity';
+import { isDefined } from '../common/utils/validation.util';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -14,11 +15,11 @@ import { Post } from './entities/post.entity';
 export class ContentService {
   constructor(
     @InjectRepository(Post)
-    private postsRepository: Repository<Post>,
+    private readonly postsRepository: Repository<Post>,
     @InjectRepository(Comment)
-    private commentsRepository: Repository<Comment>,
+    private readonly commentsRepository: Repository<Comment>,
     @InjectRepository(Like)
-    private likesRepository: Repository<Like>
+    private readonly likesRepository: Repository<Like>
   ) {}
 
   async create(createPostDto: CreatePostDto, user: User, imageUrl?: string): Promise<Post> {
@@ -99,7 +100,7 @@ export class ContentService {
       where: { postId, userId: user.id },
     });
 
-    if (existingLike !== null) {
+    if (isDefined(existingLike)) {
       await this.likesRepository.remove(existingLike);
     } else {
       const like = this.likesRepository.create({

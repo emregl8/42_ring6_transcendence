@@ -41,14 +41,14 @@
   }
   function forceLogout() {
     stop();
-    if (window.AuthClient && window.AuthClient.logout) {
-      window.AuthClient.logout();
+    if (globalThis.AuthClient && globalThis.AuthClient.logout) {
+      globalThis.AuthClient.logout();
     } else {
-      window.location.replace("/");
+      globalThis.location.replace("/");
     }
   }
-  window.addEventListener("beforeunload", stop);
-  window.TokenManager = Object.freeze({
+  globalThis.addEventListener("beforeunload", stop);
+  globalThis.TokenManager = Object.freeze({
     refresh: refresh,
     start: start,
     stop: stop,

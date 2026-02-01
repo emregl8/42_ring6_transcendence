@@ -7,12 +7,11 @@ VAULT_POD="vault-0"
 VAULT_KEYS_FILE=".vault-keys.json"
 ENV_FILE=".env"
 
-if [ ! -f "${VAULT_KEYS_FILE}" ]; then
+if [[ ! -f "${VAULT_KEYS_FILE}" ]]; then
     echo "ERROR: Vault keys file not found"
     exit 1
 fi
 VAULT_TOKEN=$(cat ${VAULT_KEYS_FILE} | jq -r '.admin_token')
-
 exec_vault() {
     kubectl exec -n "${NAMESPACE}" "${VAULT_POD}" -- sh -c "export VAULT_TOKEN='${VAULT_TOKEN}' VAULT_ADDR='https://127.0.0.1:8200' VAULT_CACERT='/vault/tls/ca.crt' && $*"
 }

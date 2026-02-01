@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { Injectable, Module, Global } from '@nestjs/common';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { RefreshToken } from '../auth/entities/refresh-token.entity';
@@ -16,7 +16,7 @@ export class DatabaseConfigService {
   createTypeOrmConfig(dbCredentials: DatabaseCredentials, appConfig: ApplicationConfig): TypeOrmModuleOptions {
     const sslConfig = this.createSslConfig(appConfig);
 
-    const port = typeof appConfig.DB_PORT === 'number' ? appConfig.DB_PORT : parseInt(String(appConfig.DB_PORT), 10);
+    const port = typeof appConfig.DB_PORT === 'number' ? appConfig.DB_PORT : Number.parseInt(String(appConfig.DB_PORT), 10);
 
     if (Number.isInteger(port) === false || port <= 0 || port > 65535) {
       throw new ConfigurationError('Invalid DB_PORT: must be an integer 1-65535');
@@ -60,7 +60,7 @@ export class DatabaseConfigService {
     }
 
     const trustedBases = ['/vault/secrets', '/etc/postgres-ca'];
-    const resolved = path.resolve(appConfig.DB_SSL_CA_PATH as string);
+    const resolved = path.resolve(appConfig.DB_SSL_CA_PATH);
 
     let realResolved: string;
     try {

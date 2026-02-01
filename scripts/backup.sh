@@ -19,7 +19,7 @@ if kubectl exec -n $NAMESPACE $VAULT_POD -- vault operator raft snapshot save /t
     kubectl cp "$NAMESPACE/$VAULT_POD:/tmp/vault.snapshot" "$TEMP_DIR/vault.snapshot"
 fi
 
-if [ -d "$PROJECT_ROOT/data/uploads" ]; then
+if [[ -d "$PROJECT_ROOT/data/uploads" ]]; then
     cp -r "$PROJECT_ROOT/data/uploads" "$TEMP_DIR/uploads"
 fi
 

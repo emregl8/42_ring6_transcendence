@@ -2,12 +2,14 @@
   "use strict";
 
   function getCookie(name) {
-    var match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+    const match = document.cookie.match(
+      new RegExp("(^| )" + name + "=([^;]+)"),
+    );
     if (match) return match[2];
   }
 
   function showError(message) {
-    var errorMessage = document.getElementById("errorMessage");
+    const errorMessage = document.getElementById("errorMessage");
     if (!errorMessage) return;
     errorMessage.textContent = message;
     errorMessage.style.display = "block";
@@ -19,7 +21,7 @@
     element.style.height = element.scrollHeight + "px";
   }
 
-  window.Utils = Object.freeze({
+  globalThis.Utils = Object.freeze({
     getCookie: getCookie,
     showError: showError,
     autoResize: autoResize,

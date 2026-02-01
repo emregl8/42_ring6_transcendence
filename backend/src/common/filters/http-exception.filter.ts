@@ -40,7 +40,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const errorMessage = errorMessages.get(status);
     return {
       statusCode: status,
-      message: errorMessage !== null && errorMessage !== undefined && errorMessage !== '' ? errorMessage : 'An error occurred',
+      message: errorMessage ?? 'An error occurred',
     };
   }
 
@@ -57,12 +57,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     message: string;
     stack?: string;
   } {
-    const stack =
-      exception instanceof Error
-        ? exception.stack !== null && exception.stack !== undefined && exception.stack !== ''
-          ? exception.stack.split('\n').slice(0, 10).join('\n')
-          : undefined
-        : undefined;
+    let stack: string | undefined;
+
+    if (exception instanceof Error && typeof exception.stack === 'string' && exception.stack !== '') {
+      stack = exception.stack.split('\n').slice(0, 10).join('\n');
+    }
 
     return {
       statusCode: status,
@@ -70,7 +69,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       path: this.sanitizeUrl(request.url),
       method: request.method,
       message: exception instanceof Error ? exception.message : message,
-      ...(stack !== null && stack !== undefined && stack !== '' ? { stack } : {}),
+      ...(stack !== undefined ? { stack } : {}),
     };
   }
 

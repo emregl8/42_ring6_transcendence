@@ -1,5 +1,5 @@
-import { createHash } from 'crypto';
-import * as net from 'net';
+import { createHash } from 'node:crypto';
+import * as net from 'node:net';
 import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { REDIS_KEYS, CACHE_TTL } from '../../redis/redis.constants';

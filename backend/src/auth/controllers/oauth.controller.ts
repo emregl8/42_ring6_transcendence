@@ -1,4 +1,4 @@
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 import { Controller, Get, Req, Res, Logger, InternalServerErrorException, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response, Request } from 'express';

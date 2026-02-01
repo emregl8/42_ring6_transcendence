@@ -28,9 +28,14 @@ export class AuditLogService implements OnModuleInit {
     }
 
     const detailStr = Object.entries(rest)
-      .map(([k, v]) => `${k}: ${v}`)
+      .map(([k, v]) => {
+        const value = typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v);
+        return `${k}: ${value}`;
+      })
       .join(' | ');
-    return `${typeValue} | ${detailStr}`;
+
+    const typeStr = typeof typeValue === 'object' && typeValue !== null ? JSON.stringify(typeValue) : String(typeValue);
+    return `${typeStr} | ${detailStr}`;
   }
 
   logUserAccess(userId: string, resource: string, action: string): void {

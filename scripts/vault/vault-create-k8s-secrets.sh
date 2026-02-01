@@ -10,7 +10,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/vault-helpers.sh"
 
 VAULT_TOKEN=$(get_admin_token "${NAMESPACE}" "${VAULT_POD}" "${VAULT_KEYS_FILE}")
-if [ $? -ne 0 ]; then
+if [[ $? -ne 0 ]]; then
 	echo "ERROR: Valid admin token not available."
 	exit 1
 fi
@@ -34,7 +34,7 @@ echo "Fetching application config from Vault..."
 APP_SECRETS=$(vault_kv_get "${NAMESPACE}" "${VAULT_POD}" "${VAULT_TOKEN}" "secret/application/config")
 REDIS_PASSWORD=$(printf '%s' "$APP_SECRETS" | jq -r '.data.data.REDIS_PASSWORD')
 
-if [ -z "$REDIS_PASSWORD" ] || [ "$REDIS_PASSWORD" = "null" ]; then
+if [[ -z "$REDIS_PASSWORD" ]] || [[ "$REDIS_PASSWORD" == "null" ]]; then
     echo "Warning: REDIS_PASSWORD not found in Vault, skipping redis-secret creation."
 else
     echo "Creating Kubernetes redis-secret from Vault..."

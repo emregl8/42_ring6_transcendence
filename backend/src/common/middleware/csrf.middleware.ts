@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 import { Injectable, NestMiddleware, ForbiddenException } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 @Injectable()

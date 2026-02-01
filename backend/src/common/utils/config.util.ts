@@ -2,8 +2,8 @@ export function parseEnvInt(value: string | undefined, defaultValue?: number): n
   if (value === undefined || value === '') {
     return defaultValue;
   }
-  const parsed = parseInt(value, 10);
-  return isNaN(parsed) ? defaultValue : parsed;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? defaultValue : parsed;
 }
 
 export function parseEnvBool(value: string | undefined, defaultValue = false): boolean {

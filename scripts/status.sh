@@ -6,10 +6,10 @@ get_pod_uptime() {
     local pod_name=$1
     local start_time=$(kubectl get pod "$pod_name" -n transcendence -o jsonpath='{.status.startTime}' 2>/dev/null)
 
-    if [ -n "$start_time" ]; then
+    if [[ -n "$start_time" ]]; then
         local created_time=$(date -d "$start_time" +%s 2>/dev/null)
 
-        if [ -n "$created_time" ]; then
+        if [[ -n "$created_time" ]]; then
             local current_time=$(date +%s)
             local uptime_seconds=$((current_time - created_time))
             local minutes=$((uptime_seconds / 60))
@@ -30,7 +30,7 @@ get_pod_status() {
         return
     }
 
-    if [ -z "$pods_output" ]; then
+    if [[ -z "$pods_output" ]]; then
         echo "No pods found"
         return
     fi
@@ -38,7 +38,7 @@ get_pod_status() {
     local bc=0
     local fc=0
     while IFS= read -r line; do
-        if [ -z "$line" ]; then
+        if [[ -z "$line" ]]; then
             continue
         fi
 

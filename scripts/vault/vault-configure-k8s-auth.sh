@@ -10,7 +10,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/vault-helpers.sh"
 
 VAULT_TOKEN=$(get_admin_token "${NAMESPACE}" "${VAULT_POD}" "${VAULT_KEYS_FILE}")
-if [ $? -ne 0 ]; then
+if [[ $? -ne 0 ]]; then
 	echo "ERROR: Valid admin token not available."
 	exit 1
 fi

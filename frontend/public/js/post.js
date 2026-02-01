@@ -1,23 +1,23 @@
 (function () {
   "use strict";
 
-  var currentPostId = null;
-  var currentUser = null;
+  let currentPostId = null;
+  let currentUser = null;
 
   function renderPost(post) {
-    var container = document.getElementById("postContainer");
-    var titleEl = document.getElementById("postTitle");
-    var metaEl = document.getElementById("postMeta");
-    var contentEl = document.getElementById("postContent");
-    var imageEl = document.getElementById("postImage");
+    const container = document.getElementById("postContainer");
+    const titleEl = document.getElementById("postTitle");
+    const metaEl = document.getElementById("postMeta");
+    const contentEl = document.getElementById("postContent");
+    const imageEl = document.getElementById("postImage");
 
-    var metaContainer = document.getElementById("authorMetaContainer");
-    var authorAvatarEl = document.getElementById("authorAvatar");
-    var authorNameEl = document.getElementById("authorName");
+    const metaContainer = document.getElementById("authorMetaContainer");
+    const authorAvatarEl = document.getElementById("authorAvatar");
+    const authorNameEl = document.getElementById("authorName");
 
-    var likeBtn = document.getElementById("likeBtn");
-    var likeCountEl = document.getElementById("likeCount");
-    var commentCountEl = document.getElementById("commentCount");
+    const likeBtn = document.getElementById("likeBtn");
+    const likeCountEl = document.getElementById("likeCount");
+    const commentCountEl = document.getElementById("commentCount");
 
     currentPostId = post.id;
 
@@ -30,7 +30,7 @@
 
     titleEl.textContent = post.title;
 
-    var dateStr = new Date(post.createdAt).toLocaleDateString("en-US", {
+    const dateStr = new Date(post.createdAt).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -47,7 +47,7 @@
           post.user.username +
           "&background=0D8ABC&color=fff&size=128";
 
-      var timeStr = new Date(post.createdAt).toLocaleTimeString("en-US", {
+      const timeStr = new Date(post.createdAt).toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
       });
@@ -55,8 +55,8 @@
         dateStr + ' <span class="dot-separator"></span> Created at ' + timeStr;
     }
 
-    if (window.DOMPurify) {
-      contentEl.innerHTML = DOMPurify.sanitize(post.content, {
+    if (globalThis.DOMPurify) {
+      contentEl.innerHTML = globalThis.DOMPurify.sanitize(post.content, {
         ADD_TAGS: ["img"],
         ADD_ATTR: ["src", "alt", "width", "height"],
       });
@@ -80,36 +80,36 @@
   }
 
   function renderComments(comments) {
-    var list = document.getElementById("commentList");
+    const list = document.getElementById("commentList");
     list.innerHTML = "";
 
     comments.forEach(function (comment) {
-      var item = document.createElement("div");
+      const item = document.createElement("div");
       item.className = "comment-item";
 
-      var header = document.createElement("div");
+      const header = document.createElement("div");
       header.className = "comment-header";
 
-      var avatar = document.createElement("img");
+      const avatar = document.createElement("img");
       avatar.className = "comment-avatar";
       avatar.src = comment.user.avatar || "/img/default-avatar.png";
 
-      var author = document.createElement("span");
+      const author = document.createElement("span");
       author.className = "comment-author";
       author.textContent = comment.user.username;
 
-      var dateObj = new Date(comment.createdAt);
-      var dateStr = dateObj.toLocaleDateString("en-US", {
+      const dateObj = new Date(comment.createdAt);
+      const dateStr = dateObj.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
         year: "numeric",
       });
-      var timeStr = dateObj.toLocaleTimeString("en-US", {
+      const timeStr = dateObj.toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
       });
 
-      var date = document.createElement("span");
+      const date = document.createElement("span");
       date.className = "comment-date";
       date.textContent = dateStr + " at " + timeStr;
 
@@ -122,7 +122,7 @@
         (comment.user.id === currentUser.id ||
           (currentPostId && currentUser.id === comment.postId))
       ) {
-        var delBtn = document.createElement("button");
+        const delBtn = document.createElement("button");
         delBtn.className = "comment-delete";
         delBtn.textContent = "Delete";
         delBtn.onclick = function () {
@@ -131,7 +131,7 @@
         header.appendChild(delBtn);
       }
 
-      var body = document.createElement("div");
+      const body = document.createElement("div");
       body.className = "comment-body";
       body.textContent = comment.content;
 
@@ -143,8 +143,8 @@
 
   function toggleLike() {
     if (!currentPostId) return;
-    var likeBtn = document.getElementById("likeBtn");
-    var likeCountEl = document.getElementById("likeCount");
+    const likeBtn = document.getElementById("likeBtn");
+    const likeCountEl = document.getElementById("likeCount");
 
     AuthClient.request("/api/content/" + currentPostId + "/like", {
       method: "POST",
@@ -169,8 +169,8 @@
   }
 
   function postComment() {
-    var input = document.getElementById("commentInput");
-    var content = input.value.trim();
+    const input = document.getElementById("commentInput");
+    const content = input.value.trim();
     if (!content) return;
 
     AuthClient.request("/api/content/" + currentPostId + "/comments", {
@@ -206,8 +206,8 @@
   }
 
   function loadPost() {
-    var urlParams = new URLSearchParams(window.location.search);
-    var id = urlParams.get("id");
+    const urlParams = new URLSearchParams(globalThis.location.search);
+    const id = urlParams.get("id");
     if (!id) {
       if (currentPostId) id = currentPostId;
       else {
@@ -237,10 +237,10 @@
   document.addEventListener("DOMContentLoaded", function () {
     loadPost();
 
-    var likeBtn = document.getElementById("likeBtn");
+    const likeBtn = document.getElementById("likeBtn");
     if (likeBtn) likeBtn.addEventListener("click", toggleLike);
 
-    var postCommentBtn = document.getElementById("postCommentBtn");
+    const postCommentBtn = document.getElementById("postCommentBtn");
     if (postCommentBtn) postCommentBtn.addEventListener("click", postComment);
   });
 })();

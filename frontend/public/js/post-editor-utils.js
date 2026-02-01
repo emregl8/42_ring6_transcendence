@@ -1,13 +1,13 @@
 (function (global) {
   "use strict";
 
-  var PostEditorUtils = {
+  const PostEditorUtils = {
     setupImageUpload: function () {
-      var insertBtn = document.getElementById("insertImageBtn");
-      var fileInput = document.getElementById("contentImageInput");
-      var coverBtn = document.getElementById("setCoverBtn");
-      var coverInput = document.getElementById("postImage");
-      var contentDiv = document.getElementById("postContent");
+      const insertBtn = document.getElementById("insertImageBtn");
+      const fileInput = document.getElementById("contentImageInput");
+      const coverBtn = document.getElementById("setCoverBtn");
+      const coverInput = document.getElementById("postImage");
+      const contentDiv = document.getElementById("postContent");
 
       if (coverBtn && coverInput) {
         coverBtn.addEventListener("click", function (e) {
@@ -21,12 +21,12 @@
               "🖼️ Cover Set: " + this.files[0].name.substring(0, 10) + "...";
             coverBtn.classList.add("active");
 
-            var previewContainer = document.getElementById(
+            const previewContainer = document.getElementById(
               "coverPreviewContainer",
             );
-            var previewImg = document.getElementById("coverPreview");
+            const previewImg = document.getElementById("coverPreview");
             if (previewContainer && previewImg) {
-              var reader = new FileReader();
+              const reader = new FileReader();
               reader.onload = function (e) {
                 previewImg.src = e.target.result;
                 previewContainer.style.display = "block";
@@ -46,8 +46,8 @@
 
       fileInput.addEventListener("change", function () {
         if (this.files && this.files[0]) {
-          var file = this.files[0];
-          var formData = new FormData();
+          const file = this.files[0];
+          const formData = new FormData();
           formData.append("file", file);
 
           insertBtn.textContent = "Uploading...";
@@ -63,20 +63,20 @@
               return res.json();
             })
             .then(function (data) {
-              var imgTag =
+              const imgTag =
                 '<img src="' +
                 data.url +
                 '" alt="Image" style="max-width: 100%;">';
 
               contentDiv.focus();
-              var selection = window.getSelection();
+              const selection = globalThis.getSelection();
               if (selection.getRangeAt && selection.rangeCount) {
-                var range = selection.getRangeAt(0);
+                let range = selection.getRangeAt(0);
                 range.deleteContents();
 
-                var el = document.createElement("div");
+                const el = document.createElement("div");
                 el.innerHTML = imgTag;
-                var frag = document.createDocumentFragment(),
+                let frag = document.createDocumentFragment(),
                   node,
                   lastNode;
                 while ((node = el.firstChild)) {
@@ -109,4 +109,4 @@
   };
 
   global.PostEditorUtils = PostEditorUtils;
-})(window);
+})(globalThis);
