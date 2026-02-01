@@ -37,6 +37,7 @@ spec:
           securityContext:
             runAsUser: 1000
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
@@ -64,6 +65,7 @@ spec:
           securityContext:
             runAsUser: 1000
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
@@ -108,6 +110,7 @@ spec:
           securityContext:
             runAsUser: 100
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
             capabilities:
               drop:
                 - ALL
@@ -189,6 +192,8 @@ spec:
             - name: redis-ca
               mountPath: /etc/redis-ca
               readOnly: true
+            - name: backend-uploads
+              mountPath: /app/uploads
           env:
             - name: VAULT_SECRETS_PATH
               value: "/vault/secrets"
@@ -226,6 +231,10 @@ spec:
           emptyDir: {}
         - name: cache
           emptyDir: {}
+        - name: backend-uploads
+          hostPath:
+            path: {{PROJECT_ROOT}}/data/uploads
+            type: DirectoryOrCreate
         - name: vault-agent-config
           configMap:
             name: vault-agent-config

@@ -79,9 +79,7 @@
           section.style.display = "block";
         }
       })
-      .catch(function (err) {
-        console.error("Load my posts error:", err);
-      });
+      .catch(function (err) {});
   }
 
   function loadProfile() {
@@ -105,7 +103,6 @@
         }
       })
       .catch(function (err) {
-        console.error("Profile load error:", err);
         Utils.showError("Failed to load profile details.");
       });
   }

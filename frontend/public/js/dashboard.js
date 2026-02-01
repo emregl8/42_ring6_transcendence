@@ -31,6 +31,18 @@
     postDiv.onclick = function () {
       window.location.href = "/post.html?id=" + post.id;
     };
+
+    if (post.imageUrl) {
+      var img = document.createElement("img");
+      img.src = post.imageUrl;
+      img.style.width = "100%";
+      img.style.height = "200px";
+      img.style.objectFit = "cover";
+      img.style.borderRadius = "4px";
+      img.style.marginBottom = "1rem";
+      postDiv.appendChild(img);
+    }
+
     var meta = document.createElement("div");
     meta.style.marginBottom = "0.5rem";
     meta.style.fontSize = "0.85rem";
@@ -49,7 +61,10 @@
     contentPreview.style.color = "#555";
     var tempDiv = document.createElement("div");
     if (window.DOMPurify) {
-      tempDiv.innerHTML = DOMPurify.sanitize(post.content);
+      tempDiv.innerHTML = DOMPurify.sanitize(post.content, {
+        ADD_TAGS: ["img"],
+        ADD_ATTR: ["src", "alt", "width", "height"],
+      });
     } else {
       tempDiv.textContent = post.content;
     }
@@ -78,9 +93,7 @@
         container.innerHTML = "";
         posts.forEach(renderPost);
       })
-      .catch(function (err) {
-        console.error("Load posts error:", err);
-      });
+      .catch(function (err) {});
   }
 
   function loadUserProfile() {
@@ -101,9 +114,7 @@
           AuthClient.startTokenRefresh();
         }
       })
-      .catch(function (err) {
-        console.error("User profile load error:", err);
-      });
+      .catch(function (err) {});
   }
   document.addEventListener("DOMContentLoaded", function () {
     loadUserProfile();

@@ -109,10 +109,9 @@ clean:
 fclean: clean
 	@echo "Removing Docker images..."
 	@docker rmi transcendence-postgres:latest transcendence-backend:latest transcendence-frontend:latest redis:7-alpine 2>/dev/null || true
-	@echo "Removing generated files..."
-	@rm -f .env .vault-keys.json
-	@echo "Removing node_modules..."
-	@rm -rf backend/node_modules frontend/node_modules
+	@echo "Removing generated files and data..."
+	@sudo rm -rf data
+	@rm -rf backend/node_modules frontend/node_modules .vault-keys.json
 	@echo "Full clean complete!"
 
 help:

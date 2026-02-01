@@ -63,9 +63,7 @@
       credentials: "include",
       headers: headers,
     })
-      .catch(function (err) {
-        console.warn("Logout failed", err);
-      })
+      .catch(function (err) {})
       .finally(function () {
         window.location.replace("/");
       });

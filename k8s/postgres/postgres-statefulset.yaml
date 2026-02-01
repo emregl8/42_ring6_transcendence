@@ -23,6 +23,13 @@ spec:
       initContainers:
       - name: prepare-postgres-tls
         image: alpine:3.20
+        securityContext:
+          runAsUser: 999
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
         command:
         - sh
         - -c
@@ -121,12 +128,7 @@ spec:
         secret:
           secretName: postgres-tls
           defaultMode: 0400
-  volumeClaimTemplates:
-  - metadata:
-      name: postgres-data
-    spec:
-      accessModes:
-        - ReadWriteOnce
-      resources:
-        requests:
-          storage: 15Gi
+      - name: postgres-data
+        hostPath:
+          path: {{PROJECT_ROOT}}/data/postgres
+          type: DirectoryOrCreate

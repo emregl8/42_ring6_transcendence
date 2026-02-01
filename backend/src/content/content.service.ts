@@ -6,6 +6,7 @@ import { User } from '../auth/entities/user.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post } from './entities/post.entity';
+
 @Injectable()
 export class ContentService {
   constructor(
@@ -13,19 +14,15 @@ export class ContentService {
     private postsRepository: Repository<Post>
   ) {}
 
-  async create(createPostDto: CreatePostDto, user: User): Promise<Post> {
-    const cleanTitle = sanitizeHtml(createPostDto.title, {
-      allowedTags: [],
-      allowedAttributes: {},
-    });
-    const cleanContent = sanitizeHtml(createPostDto.content, {
-      allowedTags: ['b', 'i', 'em', 'strong', 'p', 'br'],
-      allowedAttributes: {},
-    });
+  async create(createPostDto: CreatePostDto, user: User, imageUrl?: string): Promise<Post> {
+    const cleanTitle = this.sanitizeTitle(createPostDto.title);
+    const cleanContent = this.sanitizeContent(createPostDto.content);
+
     const post = this.postsRepository.create({
       title: cleanTitle,
       content: cleanContent,
       user,
+      imageUrl,
     });
     return this.postsRepository.save(post);
   }
@@ -54,9 +51,9 @@ export class ContentService {
     });
   }
 
-  async update(id: string, updatePostDto: UpdatePostDto, user: User): Promise<Post> {
-    if (updatePostDto.title === undefined && updatePostDto.content === undefined) {
-      throw new BadRequestException('At least one field (title or content) must be provided');
+  async update(id: string, updatePostDto: UpdatePostDto, user: User, imageUrl?: string): Promise<Post> {
+    if (updatePostDto.title === undefined && updatePostDto.content === undefined && imageUrl === undefined) {
+      throw new BadRequestException('At least one field (title, content or image) must be provided');
     }
     const post = await this.findOne(id);
     if (post === null) {
@@ -66,17 +63,42 @@ export class ContentService {
       throw new ForbiddenException('You can only edit your own posts');
     }
     if (updatePostDto.title !== undefined) {
-      post.title = sanitizeHtml(updatePostDto.title, {
-        allowedTags: [],
-        allowedAttributes: {},
-      });
+      post.title = this.sanitizeTitle(updatePostDto.title);
     }
     if (updatePostDto.content !== undefined) {
-      post.content = sanitizeHtml(updatePostDto.content, {
-        allowedTags: ['b', 'i', 'em', 'strong', 'p', 'br'],
-        allowedAttributes: {},
-      });
+      post.content = this.sanitizeContent(updatePostDto.content);
+    }
+    if (imageUrl !== undefined) {
+      post.imageUrl = imageUrl;
     }
     return this.postsRepository.save(post);
+  }
+
+  private sanitizeTitle(title: string): string {
+    return sanitizeHtml(title, {
+      allowedTags: [],
+      allowedAttributes: {},
+    });
+  }
+
+  private sanitizeContent(content: string): string {
+    return sanitizeHtml(content, {
+      allowedTags: ['b', 'i', 'em', 'strong', 'p', 'br', 'img', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'div', 'span'],
+      allowedAttributes: {
+        img: ['src', 'alt', 'width', 'height'],
+      },
+      allowedClasses: {
+        span: ['blocked-image'],
+      },
+      allowedSchemes: ['http', 'https', 'ftp', 'mailto', 'tel'],
+      transformTags: {
+        img: (tagName, attribs) => {
+          if (attribs.src !== undefined && attribs.src !== '' && !attribs.src.startsWith('/uploads/')) {
+            return { tagName: 'span', attribs: { class: 'blocked-image' } };
+          }
+          return { tagName, attribs };
+        },
+      },
+    });
   }
 }

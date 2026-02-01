@@ -1,9 +1,12 @@
+import * as crypto from 'crypto';
 import { Controller, Get, Req, Res, Logger, InternalServerErrorException, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response, Request } from 'express';
 import { AuditLogService } from '../../common/services/audit-log.service';
 import { extractClientIp, extractUserAgent } from '../../common/utils/client-info.util';
+import { parseDuration } from '../../common/utils/time.util';
 import { isNullOrEmpty, isNotNullOrEmpty } from '../../common/utils/validation.util';
+import { RedisService } from '../../redis/redis.service';
 import { User } from '../entities/user.entity';
 import { AuthService } from '../services/auth.service';
 
@@ -34,21 +37,26 @@ export class OAuthController {
   private readonly clientSecret: string;
   private readonly callbackUrl: string;
   private readonly allowedOrigins: string[];
+  private readonly jwtExpiresIn: number;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly authService: AuthService,
-    private readonly auditLogService: AuditLogService
+    private readonly auditLogService: AuditLogService,
+    private readonly redisService: RedisService
   ) {
-    this.clientId = this.configService.get<string>('app.OAUTH_42_CLIENT_ID') ?? '';
-    this.clientSecret = this.configService.get<string>('app.OAUTH_42_CLIENT_SECRET') ?? '';
-    this.callbackUrl = this.configService.get<string>('app.OAUTH_42_CALLBACK_URL') ?? '';
+    this.clientId = (this.configService.get<string>('app.OAUTH_42_CLIENT_ID') ?? '').trim();
+    this.clientSecret = (this.configService.get<string>('app.OAUTH_42_CLIENT_SECRET') ?? '').trim();
+    this.callbackUrl = (this.configService.get<string>('app.OAUTH_42_CALLBACK_URL') ?? '').trim();
 
     const allowedOriginsRaw = this.configService.get<string>('app.ALLOWED_ORIGINS', '');
     this.allowedOrigins = allowedOriginsRaw
       .split(',')
       .map((o) => o.trim())
       .filter((o) => isNotNullOrEmpty(o));
+
+    const expiresIn = this.configService.get<string>('app.JWT_EXPIRES_IN') ?? '15m';
+    this.jwtExpiresIn = parseDuration(expiresIn);
 
     this.validateConfiguration();
   }
@@ -76,10 +84,13 @@ export class OAuthController {
   }
 
   @Get('login')
-  login(@Res() res: Response): void {
+  async login(@Res() res: Response): Promise<void> {
+    const state = crypto.randomBytes(32).toString('hex');
+    await this.redisService.set(`oauth_state:${state}`, '1', 600); // 10 minutes TTL
+
     const authUrl = `https://api.intra.42.fr/oauth/authorize?client_id=${this.clientId}&redirect_uri=${encodeURIComponent(
       this.callbackUrl
-    )}&response_type=code&scope=public`;
+    )}&response_type=code&scope=public&state=${state}`;
     res.redirect(authUrl);
   }
 
@@ -87,6 +98,18 @@ export class OAuthController {
   async callback(@Req() req: Request, @Res() res: Response): Promise<void> {
     const clientIp = extractClientIp(req);
     try {
+      const state = String(req.query.state ?? '');
+      if (isNullOrEmpty(state)) {
+        throw new BadRequestException('Missing state parameter');
+      }
+
+      const isValidState = await this.redisService.get(`oauth_state:${state}`);
+      if (isValidState === null) {
+        this.auditLogService.logFailedAuthentication(clientIp, 'Invalid or expired OAuth state');
+        throw new BadRequestException('Invalid or expired state');
+      }
+      await this.redisService.del(`oauth_state:${state}`);
+
       const code = this.validateAuthorizationCode(req, clientIp);
       const accessToken = await this.exchangeCodeForToken(code, clientIp);
       const profile = await this.fetchUserProfile(accessToken);
@@ -114,22 +137,28 @@ export class OAuthController {
   }
 
   private async exchangeCodeForToken(code: string, clientIp: string): Promise<string> {
+    const params = new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: this.clientId,
+      client_secret: this.clientSecret,
+      code: code,
+      redirect_uri: this.callbackUrl,
+    });
+
     const response = await fetch('https://api.intra.42.fr/oauth/token', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: this.clientId,
-        client_secret: this.clientSecret,
-        code,
-        redirect_uri: this.callbackUrl,
-      }),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+      },
+      body: params.toString(),
       signal: AbortSignal.timeout(10000),
     });
 
     if (!response.ok) {
-      this.logger.warn(`OAuth token exchange failed: status=${response.status}`);
-      this.auditLogService.logFailedAuthentication(clientIp, 'OAuth token exchange failed');
+      const errorBody = await response.text().catch(() => 'No body');
+      this.logger.error(`OAuth token exchange failed: status=${response.status}, body=${errorBody}`);
+      this.auditLogService.logFailedAuthentication(clientIp, `OAuth token exchange failed: ${response.status}`);
       throw new UnauthorizedException('Authentication failed');
     }
 
@@ -137,6 +166,7 @@ export class OAuthController {
     const accessToken = data.access_token ?? '';
 
     if (accessToken === '') {
+      this.logger.error('OAuth token missing access_token in response');
       this.auditLogService.logFailedAuthentication(clientIp, 'OAuth token missing access_token');
       throw new UnauthorizedException('Authentication failed');
     }
@@ -203,7 +233,7 @@ export class OAuthController {
 
     res.cookie('auth_token', jwtToken, {
       ...commonOptions,
-      maxAge: 15 * 60 * 1000,
+      maxAge: this.jwtExpiresIn,
     });
 
     if (refreshToken !== undefined && refreshToken !== '') {

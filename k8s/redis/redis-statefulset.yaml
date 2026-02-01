@@ -23,6 +23,13 @@ spec:
       initContainers:
         - name: prepare-redis-tls
           image: alpine:3.20
+          securityContext:
+            runAsUser: 999
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           command:
             - sh
             - -c
@@ -128,4 +135,6 @@ spec:
             secretName: redis-tls
             defaultMode: 0400
         - name: redis-data
-          emptyDir: {}
+          hostPath:
+            path: {{PROJECT_ROOT}}/data/redis
+            type: DirectoryOrCreate

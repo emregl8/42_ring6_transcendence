@@ -18,12 +18,20 @@
       })
       .then(function (post) {
         document.getElementById("postTitle").value = post.title;
-        document.getElementById("postContent").value = post.content;
-        var textarea = document.getElementById("postContent");
-        Utils.autoResize(textarea);
+        document.getElementById("postContent").innerHTML = post.content;
+
+        if (post.imageUrl) {
+          var previewContainer = document.getElementById(
+            "coverPreviewContainer",
+          );
+          var previewImg = document.getElementById("coverPreview");
+          if (previewContainer && previewImg) {
+            previewImg.src = post.imageUrl;
+            previewContainer.style.display = "block";
+          }
+        }
       })
       .catch(function (err) {
-        console.error("Load post error:", err);
         Utils.showError(
           "Failed to load content. It may have been deleted or you do not have permission.",
         );
@@ -33,22 +41,30 @@
   function savePost() {
     var titleInput = document.getElementById("postTitle");
     var contentInput = document.getElementById("postContent");
+    var imageInput = document.getElementById("postImage");
     var saveBtn = document.getElementById("saveBtn");
     var title = titleInput.value.trim();
-    var content = contentInput.value.trim();
-    if (!title || !content) {
+    var content = contentInput.innerHTML.trim();
+    if (!title || !content || content === "<br>") {
       Utils.showError("Title and content are required.");
       return;
     }
+
+    var formData = new FormData();
+    formData.append("title", title);
+    formData.append("content", content);
+    if (imageInput.files.length > 0) {
+      formData.append("image", imageInput.files[0]);
+    }
+
     saveBtn.disabled = true;
     saveBtn.textContent = "Saving...";
     AuthClient.request("/api/content/" + postId, {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({ title: title, content: content }),
+      body: formData,
     })
       .then(function (res) {
         if (!res.ok) throw new Error("Failed to update post");
@@ -58,7 +74,6 @@
         window.location.href = "/profile";
       })
       .catch(function (err) {
-        console.error("Update post error:", err);
         Utils.showError(err.message || "Failed to update content");
         saveBtn.disabled = false;
         saveBtn.textContent = "Save Changes";
@@ -70,10 +85,9 @@
     if (saveBtn) {
       saveBtn.addEventListener("click", savePost);
     }
-    var textarea = document.getElementById("postContent");
-    textarea.addEventListener("input", function () {
-      Utils.autoResize(this);
-    });
+    if (window.PostEditorUtils) {
+      window.PostEditorUtils.setupImageUpload();
+    }
     loadPost();
   });
 })();

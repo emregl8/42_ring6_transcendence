@@ -17,7 +17,6 @@
       })
       .catch(function (err) {
         stop();
-        console.error("Token refresh failed:", err);
         forceLogout();
         return false;
       })

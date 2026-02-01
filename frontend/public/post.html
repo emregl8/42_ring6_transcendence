@@ -13,7 +13,9 @@
         .post-header { margin-bottom: 2rem; }
         .post-title { font-size: 2.5rem; font-weight: bold; margin-bottom: 1rem; line-height: 1.2; }
         .post-meta { color: #666; font-size: 0.9rem; }
-        .post-content { font-size: 1.2rem; line-height: 1.6; color: #292929; white-space: pre-wrap; }
+        .post-content { font-size: 1.2rem; line-height: 1.6; color: #292929; }
+        .post-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 1rem 0; display: block; }
+        .post-content p { margin-bottom: 1rem; }
         .error-message { background-color: #fee; color: #c00; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; display: none; }
         .back-link { display: inline-block; margin-bottom: 2rem; color: #666; text-decoration: none; }
         .back-link:hover { color: #333; }
@@ -37,6 +39,7 @@
         
         <div id="postContainer" style="display: none;">
             <div class="post-header">
+                <img id="postImage" src="" alt="Cover Image" style="max-width: 100%; height: auto; display: none; margin-bottom: 2rem; border-radius: 8px;">
                 <h1 class="post-title" id="postTitle">Loading...</h1>
                 <div class="post-meta" id="postMeta"></div>
             </div>

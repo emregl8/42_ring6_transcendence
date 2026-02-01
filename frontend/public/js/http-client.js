@@ -17,7 +17,6 @@
   function request(url, options) {
     var opts = normalizeOptions(options);
     return fetch(url, opts).catch(function (err) {
-      console.error("Network error:", err);
       throw err;
     });
   }

@@ -2,9 +2,9 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
-RUN npm ci && \
+RUN npm ci --include=dev && \
     npm cache clean --force && \
     chown -R node:node /app
 
@@ -18,7 +18,7 @@ FROM node:24-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
 RUN npm ci --omit=dev && \
     npm cache clean --force && \

@@ -23,15 +23,15 @@ for pod in "${PODS[@]}"; do
 	kubectl wait --for=condition=ready pod/${pod} -n ${NAMESPACE} --timeout=120s
 done
 
-INIT_STATUS=$(exec_vault "${NAMESPACE}" "${PODS[0]}" "VAULT_CACERT=/vault/tls/ca.crt vault status -format=json" 2>/dev/null | jq -r '.initialized' || echo "false")
+INIT_STATUS=$(exec_vault "${NAMESPACE}" "${PODS[0]}" "VAULT_CACERT=/vault/tls/ca.crt vault status -format=json || true" 2>/dev/null | jq -r '.initialized' || echo "false")
 
 get_json_value() {
 	field="$1"
 	jq -r "$field" "${VAULT_KEYS_FILE}" 2>/dev/null | tr -d '\r\n'
 }
 
-if [ "$INIT_STATUS" = "true" ] && [ -f "${VAULT_KEYS_FILE}" ]; then
-	echo "ERROR: Vault already initialized with existing keys."
+if [ "$INIT_STATUS" = "true" ] && [ ! -f "${VAULT_KEYS_FILE}" ]; then
+	echo "ERROR: Vault is initialized but keys file is missing!"
 	exit 1
 fi
 

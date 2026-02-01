@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
@@ -17,6 +18,16 @@ import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: path.join(__dirname, '..', 'uploads', 'public'),
+      serveRoot: '/uploads',
+      serveStaticOptions: {
+        setHeaders: (res) => {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          res.setHeader('X-Content-Type-Options', 'nosniff');
+        },
+      },
+    }),
     CommonModule,
     RedisModule,
     ConfigModule.forRoot({

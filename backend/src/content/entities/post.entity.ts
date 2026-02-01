@@ -8,6 +8,8 @@ export class Post {
   title!: string;
   @Column('text')
   content!: string;
+  @Column({ name: 'image_url', nullable: true })
+  imageUrl?: string;
   @ManyToOne(() => User, { eager: true })
   @JoinColumn({ name: 'user_id' })
   user!: User;

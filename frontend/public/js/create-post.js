@@ -3,17 +3,25 @@
   function createPost() {
     var titleInput = document.getElementById("postTitle");
     var contentInput = document.getElementById("postContent");
+    var imageInput = document.getElementById("postImage");
     var publishBtn = document.getElementById("publishBtn");
     var title = titleInput.value.trim();
-    var content = contentInput.value.trim();
+    var content = contentInput.innerHTML.trim();
 
     if (!title) {
       Utils.showError("Please enter a title.");
       return;
     }
-    if (!content) {
+    if (!content || content === "<br>") {
       Utils.showError("Please write some content.");
       return;
+    }
+
+    var formData = new FormData();
+    formData.append("title", title);
+    formData.append("content", content);
+    if (imageInput.files.length > 0) {
+      formData.append("image", imageInput.files[0]);
     }
 
     publishBtn.disabled = true;
@@ -21,10 +29,9 @@
     AuthClient.request("/api/content", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({ title: title, content: content }),
+      body: formData,
     })
       .then(function (res) {
         if (!res.ok) {
@@ -39,7 +46,6 @@
         window.location.href = "/dashboard.html";
       })
       .catch(function (err) {
-        console.error("Create post error:", err);
         Utils.showError(err.message || "Failed to share content");
         publishBtn.disabled = false;
         publishBtn.textContent = "Share Knowledge";
@@ -51,9 +57,8 @@
     if (publishBtn) {
       publishBtn.addEventListener("click", createPost);
     }
-    var textarea = document.getElementById("postContent");
-    textarea.addEventListener("input", function () {
-      Utils.autoResize(this);
-    });
+    if (window.PostEditorUtils) {
+      window.PostEditorUtils.setupImageUpload();
+    }
   });
 })();

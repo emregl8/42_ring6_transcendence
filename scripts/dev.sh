@@ -58,6 +58,30 @@ setup_hosts() {
     fi
 }
 
+create_data_directories() {
+    echo "Creating data directories with secure permissions..."
+
+    sudo mkdir -p "$PROJECT_ROOT/data"
+    sudo chmod 755 "$PROJECT_ROOT/data"
+
+    sudo mkdir -p "$PROJECT_ROOT/data/vault"
+    sudo chown -R 100:1000 "$PROJECT_ROOT/data/vault"
+    sudo chmod -R 700 "$PROJECT_ROOT/data/vault"
+
+    sudo mkdir -p "$PROJECT_ROOT/data/postgres"
+    sudo chown -R 999:999 "$PROJECT_ROOT/data/postgres"
+    sudo chmod -R 700 "$PROJECT_ROOT/data/postgres"
+
+    sudo mkdir -p "$PROJECT_ROOT/data/redis"
+    sudo chown -R 999:999 "$PROJECT_ROOT/data/redis"
+    sudo chmod -R 700 "$PROJECT_ROOT/data/redis"
+
+    sudo mkdir -p "$PROJECT_ROOT/data/uploads/temp"
+    sudo mkdir -p "$PROJECT_ROOT/data/uploads/public"
+    sudo chown -R 1000:1000 "$PROJECT_ROOT/data/uploads"
+    sudo chmod -R 700 "$PROJECT_ROOT/data/uploads"
+}
+
 generate_env() {
     if [ -f "$ENV_FILE" ]; then
         echo ".env file already exists at $ENV_FILE. Skipping generation."
@@ -218,10 +242,7 @@ deploy_vault() {
         return 1
     fi
 
-    if ! kubectl apply -n "$NAMESPACE" -f k8s/vault/vault-statefulset.yaml >/dev/null; then
-        echo "ERROR: Failed to apply vault statefulset" >&2
-        return 1
-    fi
+    sed "s|{{PROJECT_ROOT}}|$PROJECT_ROOT|g" k8s/vault/vault-statefulset.yaml | kubectl apply -n "$NAMESPACE" -f - >/dev/null
 
     if ! kubectl wait --for=condition=ready pod/vault-0 -n "$NAMESPACE" --timeout=180s >/dev/null; then
         echo "ERROR: Vault pod failed to become ready" >&2
@@ -231,18 +252,14 @@ deploy_vault() {
 
 deploy_postgres() {
     echo "Deploying PostgreSQL..."
-    if ! kubectl apply -n "$NAMESPACE" -f k8s/postgres/ >/dev/null; then
-        echo "ERROR: Failed to apply PostgreSQL manifests" >&2
-        return 1
-    fi
+    find k8s/postgres/ -name "*.yaml" ! -name "postgres-statefulset.yaml" -exec kubectl apply -n "$NAMESPACE" -f {} \; >/dev/null
+    sed "s|{{PROJECT_ROOT}}|$PROJECT_ROOT|g" k8s/postgres/postgres-statefulset.yaml | kubectl apply -n "$NAMESPACE" -f - >/dev/null
 }
 
 deploy_redis() {
     echo "Deploying Redis..."
-    if ! kubectl apply -n "$NAMESPACE" -f k8s/redis/ >/dev/null; then
-        echo "ERROR: Failed to apply Redis manifests" >&2
-        return 1
-    fi
+    find k8s/redis/ -name "*.yaml" ! -name "redis-statefulset.yaml" -exec kubectl apply -n "$NAMESPACE" -f {} \; >/dev/null
+    sed "s|{{PROJECT_ROOT}}|$PROJECT_ROOT|g" k8s/redis/redis-statefulset.yaml | kubectl apply -n "$NAMESPACE" -f - >/dev/null
 }
 
 deploy_backend() {
@@ -252,10 +269,9 @@ deploy_backend() {
         return 1
     fi
 
-    if ! kubectl apply -n "$NAMESPACE" -f k8s/backend/ >/dev/null; then
-        echo "ERROR: Failed to apply backend manifests" >&2
-        return 1
-    fi
+    find k8s/backend/ -name "*.yaml" ! -name "backend-deployment.yaml" ! -name "backend-configmap-dev.yaml" -exec kubectl apply -n "$NAMESPACE" -f {} \; >/dev/null
+
+    sed "s|{{PROJECT_ROOT}}|$PROJECT_ROOT|g" k8s/backend/backend-deployment.yaml | kubectl apply -n "$NAMESPACE" -f - >/dev/null
 }
 
 deploy_frontend() {
@@ -347,6 +363,7 @@ dev() {
     cleanup_stale_namespace
     sudo echo ""
     cd "$PROJECT_ROOT" || return 1
+    create_data_directories || return 1
     setup_hosts || return 1
     generate_env || return 1
     disable_traefik || return 1

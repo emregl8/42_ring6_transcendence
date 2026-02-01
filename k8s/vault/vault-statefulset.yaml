@@ -165,12 +165,7 @@ spec:
             defaultMode: 0440
         - name: vault-tmp
           emptyDir: {}
-  volumeClaimTemplates:
-    - metadata:
-        name: vault-data
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 1Gi
+        - name: vault-data
+          hostPath:
+            path: {{PROJECT_ROOT}}/data/vault
+            type: DirectoryOrCreate

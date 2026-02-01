@@ -5,6 +5,15 @@
     var titleEl = document.getElementById("postTitle");
     var metaEl = document.getElementById("postMeta");
     var contentEl = document.getElementById("postContent");
+    var imageEl = document.getElementById("postImage");
+
+    if (post.imageUrl) {
+      imageEl.src = post.imageUrl;
+      imageEl.style.display = "block";
+    } else {
+      imageEl.style.display = "none";
+    }
+
     titleEl.textContent = post.title;
     var username = post.user ? post.user.username : "Unknown";
     var date = new Date(post.createdAt).toLocaleDateString("en-US", {
@@ -16,7 +25,10 @@
     });
     metaEl.textContent = "Written by " + username + " on " + date;
     if (window.DOMPurify) {
-      contentEl.innerHTML = DOMPurify.sanitize(post.content);
+      contentEl.innerHTML = DOMPurify.sanitize(post.content, {
+        ADD_TAGS: ["img"],
+        ADD_ATTR: ["src", "alt", "width", "height"],
+      });
     } else {
       contentEl.textContent = post.content;
     }
@@ -41,7 +53,6 @@
         renderPost(post);
       })
       .catch(function (err) {
-        console.error("Load post error:", err);
         Utils.showError("Failed to load story.");
       });
   }

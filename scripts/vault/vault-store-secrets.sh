@@ -18,7 +18,7 @@ exec_vault() {
 }
 
 get_env_val() {
-    grep "^$1=" "${ENV_FILE}" | cut -d= -f2- | tr -d '"' | tr -d "'"
+    grep "^$1=" "${ENV_FILE}" | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d '\r' | sed 's/[[:space:]]*$//'
 }
 
 echo "Storing secrets..."
