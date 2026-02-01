@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transcendence - Story</title>
+    <title>42-lms - Story</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #ffffff; color: #333; }
@@ -63,6 +63,105 @@
             margin: 0 0.1rem;
         }
 
+        .interactions-bar {
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+            padding: 1rem 0;
+            margin: 2rem 0;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .interaction-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #757575;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+        .interaction-btn:hover {
+            color: #292929;
+        }
+
+        .interaction-btn.liked {
+            color: #dc3545;
+        }
+
+        .interaction-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .comments-section {
+            margin-top: 3rem;
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            margin-bottom: 1rem;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .comment-list {
+            margin-top: 2rem;
+        }
+
+        .comment-item {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .comment-author {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .comment-date {
+            color: #757575;
+            font-size: 0.85rem;
+        }
+
+        .comment-body {
+            line-height: 1.5;
+            color: #292929;
+        }
+
+        .comment-delete {
+            color: #dc3545;
+            font-size: 0.8rem;
+            margin-left: auto;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+
         .btn-delete { background-color: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
         .btn-delete:hover { background-color: #c82333; }
         .error-message { background-color: #fee; color: #c00; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; display: none; }
@@ -103,6 +202,26 @@
                 <img id="postImage" src="" alt="Cover Image" style="max-width: 100%; height: auto; display: none; margin-bottom: 2rem; border-radius: 8px;">
             </div>
             <div class="post-content" id="postContent"></div>
+
+            <div class="interactions-bar">
+                <button class="interaction-btn" id="likeBtn">
+                    <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    <span id="likeCount">0</span>
+                </button>
+                <div class="interaction-btn" style="cursor: default;">
+                    <svg viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+                    <span id="commentCount">0</span>
+                </div>
+            </div>
+
+            <div class="comments-section">
+                <h3>Responses</h3>
+                <div class="comment-form">
+                    <textarea id="commentInput" placeholder="What are your thoughts?"></textarea>
+                    <button id="postCommentBtn" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Respond</button>
+                </div>
+                <div class="comment-list" id="commentList"></div>
+            </div>
         </div>
     </div>
 

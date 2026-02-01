@@ -1,17 +1,5 @@
 (function () {
   "use strict";
-  function renderHeaderUser(user) {
-    var usernameEl = document.getElementById("headerUsername");
-    var avatarEl = document.getElementById("headerAvatar");
-    if (usernameEl) usernameEl.textContent = user.username;
-    if (avatarEl) {
-      avatarEl.src =
-        user.avatar ||
-        "https://ui-avatars.com/api/?name=" +
-          user.username +
-          "&background=0D8ABC&color=fff&size=64";
-    }
-  }
 
   function renderPost(post) {
     var container = document.getElementById("postsContainer");
@@ -96,27 +84,9 @@
       .catch(function (err) {});
   }
 
-  function loadUserProfile() {
-    AuthClient.request("/api/auth/me", {
-      headers: { Accept: "application/json" },
-    })
-      .then(function (res) {
-        if (!res || !res.ok) {
-          throw new Error("Profile request failed");
-        }
-
-        return res.json();
-      })
-      .then(function (user) {
-        renderHeaderUser(user);
-        loadPosts();
-        if (AuthClient.startTokenRefresh) {
-          AuthClient.startTokenRefresh();
-        }
-      })
-      .catch(function (err) {});
-  }
   document.addEventListener("DOMContentLoaded", function () {
-    loadUserProfile();
+    AuthClient.loadUserProfile(function () {
+      loadPosts();
+    });
   });
 })();

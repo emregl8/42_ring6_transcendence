@@ -42,7 +42,7 @@
       actionsDiv.className = "post-actions";
 
       var editBtn = document.createElement("a");
-      editBtn.href = "/edit-post.html?id=" + post.id;
+      editBtn.href = "/editor.html?id=" + post.id;
       editBtn.className = "btn-action btn-edit";
       editBtn.textContent = "Edit";
 
@@ -96,24 +96,9 @@
       });
   }
 
-  function loadUserProfile() {
-    AuthClient.request("/api/auth/me")
-      .then(function (res) {
-        if (res.ok) return res.json();
-        return null;
-      })
-      .then(function (user) {
-        if (user) {
-          document.getElementById("headerUsername").textContent = user.username;
-          if (user.avatar) {
-            document.getElementById("headerAvatar").src = user.avatar;
-          }
-        }
-      });
-  }
-
   document.addEventListener("DOMContentLoaded", function () {
-    loadMyPosts();
-    loadUserProfile();
+    AuthClient.loadUserProfile(function () {
+      loadMyPosts();
+    });
   });
 })();

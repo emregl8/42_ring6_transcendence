@@ -68,10 +68,39 @@
         window.location.replace("/");
       });
   }
+
+  function loadUserProfile(callback) {
+    authenticatedRequest("/api/auth/me", {
+      headers: { Accept: "application/json" },
+    })
+      .then(function (res) {
+        if (!res || !res.ok) {
+          throw new Error("Profile request failed");
+        }
+        return res.json();
+      })
+      .then(function (user) {
+        var usernameEl = document.getElementById("headerUsername");
+        var avatarEl = document.getElementById("headerAvatar");
+        if (usernameEl) usernameEl.textContent = user.username;
+        if (avatarEl) {
+          avatarEl.src = user.avatar || "/img/default-avatar.png";
+        }
+        if (TokenManager.start) {
+          TokenManager.start();
+        }
+        if (callback) callback(user);
+      })
+      .catch(function (err) {
+        console.error("Failed to load user profile:", err);
+      });
+  }
+
   window.AuthClient = Object.freeze({
     request: authenticatedRequest,
     logout: forceLogout,
     startTokenRefresh: TokenManager.start,
     stopTokenRefresh: TokenManager.stop,
+    loadUserProfile: loadUserProfile,
   });
 })();

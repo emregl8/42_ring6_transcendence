@@ -3,15 +3,22 @@ import { InjectRepository } from '@nestjs/typeorm';
 import sanitizeHtml from 'sanitize-html';
 import { Repository } from 'typeorm';
 import { User } from '../auth/entities/user.entity';
+import { CreateCommentDto } from './dto/create-comment.dto';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { Comment } from './entities/comment.entity';
+import { Like } from './entities/like.entity';
 import { Post } from './entities/post.entity';
 
 @Injectable()
 export class ContentService {
   constructor(
     @InjectRepository(Post)
-    private postsRepository: Repository<Post>
+    private postsRepository: Repository<Post>,
+    @InjectRepository(Comment)
+    private commentsRepository: Repository<Comment>,
+    @InjectRepository(Like)
+    private likesRepository: Repository<Like>
   ) {}
 
   async create(createPostDto: CreatePostDto, user: User, imageUrl?: string): Promise<Post> {
@@ -85,6 +92,99 @@ export class ContentService {
     await this.postsRepository.remove(post);
   }
 
+  async toggleLike(postId: string, user: User): Promise<{ liked: boolean; count: number }> {
+    const post = await this.getPostOrThrow(postId);
+
+    const existingLike = await this.likesRepository.findOne({
+      where: { postId, userId: user.id },
+    });
+
+    if (existingLike !== null) {
+      await this.likesRepository.remove(existingLike);
+    } else {
+      const like = this.likesRepository.create({
+        post,
+        user,
+      });
+      await this.likesRepository.save(like);
+    }
+
+    const count = await this.likesRepository.count({ where: { postId } });
+    return { liked: existingLike === null, count };
+  }
+
+  async addComment(postId: string, createCommentDto: CreateCommentDto, user: User): Promise<Comment> {
+    const post = await this.getPostOrThrow(postId);
+
+    const cleanContent = sanitizeHtml(createCommentDto.content, {
+      allowedTags: [],
+      allowedAttributes: {},
+    });
+
+    const comment = this.commentsRepository.create({
+      content: cleanContent,
+      post,
+      user,
+    });
+
+    return this.commentsRepository.save(comment);
+  }
+
+  async deleteComment(commentId: string, user: User): Promise<void> {
+    const comment = await this.commentsRepository.findOne({
+      where: { id: commentId },
+      relations: ['user', 'post', 'post.user'],
+    });
+
+    if (comment === null) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    if (comment.user.id !== user.id && comment.post.user.id !== user.id) {
+      throw new ForbiddenException('You can only delete your own comments or comments on your post');
+    }
+
+    await this.commentsRepository.remove(comment);
+  }
+
+  async getPostDetails(id: string, user?: User): Promise<Post & { likeCount: number; isLiked: boolean; comments: Comment[] }> {
+    const post = await this.postsRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+
+    if (post === null) {
+      throw new NotFoundException('Post not found');
+    }
+
+    const likeCount = await this.likesRepository.count({ where: { postId: id } });
+    let isLiked = false;
+    if (user !== undefined) {
+      isLiked = await this.likesRepository.exists({ where: { postId: id, userId: user.id } });
+    }
+
+    const comments = await this.commentsRepository.find({
+      where: { postId: id },
+      relations: ['user'],
+      order: { createdAt: 'ASC' },
+    });
+
+    return {
+      ...post,
+      likeCount,
+      isLiked,
+      comments,
+    };
+  }
+
+  private async getPostOrThrow(id: string): Promise<Post> {
+    const post = await this.postsRepository.findOneBy({ id });
+    if (post === null) {
+      throw new NotFoundException('Post not found');
+    }
+    return post;
+  }
+
   private sanitizeTitle(title: string): string {
     return sanitizeHtml(title, {
       allowedTags: [],
@@ -97,6 +197,7 @@ export class ContentService {
       allowedTags: ['b', 'i', 'em', 'strong', 'p', 'br', 'img', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'div', 'span'],
       allowedAttributes: {
         img: ['src', 'alt', 'width', 'height'],
+        span: ['class'],
       },
       allowedClasses: {
         span: ['blocked-image'],

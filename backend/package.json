@@ -1,7 +1,7 @@
 {
   "name": "transcendence-backend",
   "version": "1.0.0",
-  "description": "Transcendence Backend API",
+  "description": "42-lms Backend API",
   "type": "commonjs",
   "main": "dist/main.js",
   "scripts": {

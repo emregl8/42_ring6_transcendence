@@ -9,7 +9,6 @@ import {
   UseGuards,
   Req,
   Param,
-  NotFoundException,
   Patch,
   UseInterceptors,
   UploadedFile,
@@ -27,8 +26,10 @@ import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../auth/entities/user.entity';
 import { ContentService } from './content.service';
+import { CreateCommentDto } from './dto/create-comment.dto';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { Comment as CommentEntity } from './entities/comment.entity';
 import { Post as PostEntity } from './entities/post.entity';
 import { PostRateLimitGuard } from './guards/post-rate-limit.guard';
 
@@ -78,6 +79,17 @@ export class ContentController implements OnModuleInit {
     }
   }
 
+  private async handleUploadedImage(file?: Express.Multer.File): Promise<string | undefined> {
+    if (file === undefined) {
+      return undefined;
+    }
+    if (!file.mimetype.startsWith('image/')) {
+      await fs.unlink(file.path).catch(() => {});
+      throw new BadRequestException('Only images are allowed');
+    }
+    return this.processImage(file.filename);
+  }
+
   @Post()
   @UseGuards(PostRateLimitGuard)
   @UseInterceptors(FileInterceptor('image', { storage }))
@@ -92,14 +104,7 @@ export class ContentController implements OnModuleInit {
     )
     file?: Express.Multer.File
   ): Promise<PostEntity> {
-    let imageUrl: string | undefined;
-    if (file !== undefined) {
-      if (!file.mimetype.startsWith('image/')) {
-        await fs.unlink(file.path).catch(() => {});
-        throw new BadRequestException('Only images are allowed');
-      }
-      imageUrl = await this.processImage(file.filename);
-    }
+    const imageUrl = await this.handleUploadedImage(file);
     return this.contentService.create(createPostDto, req.user, imageUrl);
   }
 
@@ -114,12 +119,26 @@ export class ContentController implements OnModuleInit {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<PostEntity> {
-    const post = await this.contentService.findOne(id);
-    if (post === null) {
-      throw new NotFoundException('Post not found');
-    }
-    return post;
+  async findOne(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest
+  ): Promise<PostEntity & { likeCount: number; isLiked: boolean; comments: CommentEntity[] }> {
+    return this.contentService.getPostDetails(id, req.user);
+  }
+
+  @Post(':id/like')
+  async toggleLike(@Param('id') id: string, @Req() req: AuthenticatedRequest): Promise<{ liked: boolean; count: number }> {
+    return this.contentService.toggleLike(id, req.user);
+  }
+
+  @Post(':id/comments')
+  async addComment(@Param('id') id: string, @Body() createCommentDto: CreateCommentDto, @Req() req: AuthenticatedRequest): Promise<CommentEntity> {
+    return this.contentService.addComment(id, createCommentDto, req.user);
+  }
+
+  @Delete('comments/:id')
+  async deleteComment(@Param('id') id: string, @Req() req: AuthenticatedRequest): Promise<void> {
+    return this.contentService.deleteComment(id, req.user);
   }
 
   @Patch(':id')
@@ -137,14 +156,7 @@ export class ContentController implements OnModuleInit {
     )
     file?: Express.Multer.File
   ): Promise<PostEntity> {
-    let imageUrl: string | undefined;
-    if (file !== undefined) {
-      if (!file.mimetype.startsWith('image/')) {
-        await fs.unlink(file.path).catch(() => {});
-        throw new BadRequestException('Only images are allowed');
-      }
-      imageUrl = await this.processImage(file.filename);
-    }
+    const imageUrl = await this.handleUploadedImage(file);
     return this.contentService.update(id, updatePostDto, req.user, imageUrl);
   }
 
@@ -164,11 +176,10 @@ export class ContentController implements OnModuleInit {
     )
     file: Express.Multer.File
   ): Promise<{ url: string }> {
-    if (!file.mimetype.startsWith('image/')) {
-      await fs.unlink(file.path).catch(() => {});
-      throw new BadRequestException('Only images are allowed');
+    const url = await this.handleUploadedImage(file);
+    if (url === undefined) {
+      throw new BadRequestException('File is required');
     }
-    const url = await this.processImage(file.filename);
     return { url };
   }
 }

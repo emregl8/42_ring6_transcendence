@@ -7,6 +7,8 @@ import { User } from '../auth/entities/user.entity';
 import { ConfigurationError } from '../common/errors/configuration.error';
 import { DatabaseCredentials, ApplicationConfig } from '../common/interfaces/config.interface';
 import { parseBoolean } from '../common/utils/parse-boolean.util';
+import { Comment } from '../content/entities/comment.entity';
+import { Like } from '../content/entities/like.entity';
 import { Post } from '../content/entities/post.entity';
 
 @Injectable()
@@ -27,7 +29,7 @@ export class DatabaseConfigService {
       username: dbCredentials.POSTGRES_USER,
       password: dbCredentials.POSTGRES_PASSWORD,
       database: dbCredentials.POSTGRES_DB,
-      entities: [User, RefreshToken, Post],
+      entities: [User, RefreshToken, Post, Comment, Like],
       synchronize: appConfig.NODE_ENV === 'development',
       logging: ['error'],
       extra: this.createConnectionPoolConfig(),

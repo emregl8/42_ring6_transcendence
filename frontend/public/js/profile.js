@@ -20,36 +20,11 @@
     card.style.display = "block";
   }
 
-  function loadProfile() {
-    AuthClient.request("/api/auth/me", {
-      headers: { Accept: "application/json" },
-    })
-      .then(function (res) {
-        if (!res.ok) {
-          return res.text().then(function (text) {
-            throw new Error(
-              "Profile request failed: " + res.status + " - " + text,
-            );
-          });
-        }
-        return res.json();
-      })
-      .then(function (user) {
-        renderProfile(user);
-        if (AuthClient.startTokenRefresh) {
-          AuthClient.startTokenRefresh();
-        }
-      })
-      .catch(function (err) {
-        Utils.showError("Failed to load profile details.");
-      });
-  }
-
   document.addEventListener("DOMContentLoaded", function () {
     var logoutBtn = document.getElementById("logoutBtn");
     if (logoutBtn) {
       logoutBtn.addEventListener("click", AuthClient.logout);
     }
-    loadProfile();
+    AuthClient.loadUserProfile(renderProfile);
   });
 })();
