@@ -3,10 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { validateAndGetJwtSecret } from '../../common/utils/jwt.util';
-import { isNotNullOrEmpty } from '../../common/utils/validation.util';
-import { User } from '../entities/user.entity';
-import { AuthService } from '../services/auth.service';
+import { validateAndGetJwtSecret } from '../../common/utils/jwt.util.js';
+import { isNotNullOrEmpty } from '../../common/utils/validation.util.js';
+import { User } from '../entities/user.entity.js';
+import { AuthService } from '../services/auth.service.js';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {

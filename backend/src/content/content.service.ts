@@ -2,14 +2,14 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException 
 import { InjectRepository } from '@nestjs/typeorm';
 import sanitizeHtml from 'sanitize-html';
 import { Repository } from 'typeorm';
-import { User } from '../auth/entities/user.entity';
-import { isDefined } from '../common/utils/validation.util';
-import { CreateCommentDto } from './dto/create-comment.dto';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
-import { Comment } from './entities/comment.entity';
-import { Like } from './entities/like.entity';
-import { Post } from './entities/post.entity';
+import { User } from '../auth/entities/user.entity.js';
+import { isDefined } from '../common/utils/validation.util.js';
+import { CreateCommentDto } from './dto/create-comment.dto.js';
+import { CreatePostDto } from './dto/create-post.dto.js';
+import { UpdatePostDto } from './dto/update-post.dto.js';
+import { Comment } from './entities/comment.entity.js';
+import { Like } from './entities/like.entity.js';
+import { Post } from './entities/post.entity.js';
 
 @Injectable()
 export class ContentService {

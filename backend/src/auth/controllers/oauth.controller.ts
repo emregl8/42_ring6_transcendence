@@ -2,13 +2,13 @@ import * as crypto from 'node:crypto';
 import { Controller, Get, Req, Res, Logger, InternalServerErrorException, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response, Request } from 'express';
-import { AuditLogService } from '../../common/services/audit-log.service';
-import { extractClientIp, extractUserAgent } from '../../common/utils/client-info.util';
-import { parseDuration } from '../../common/utils/time.util';
-import { isNullOrEmpty, isNotNullOrEmpty } from '../../common/utils/validation.util';
-import { RedisService } from '../../redis/redis.service';
-import { User } from '../entities/user.entity';
-import { AuthService } from '../services/auth.service';
+import { AuditLogService } from '../../common/services/audit-log.service.js';
+import { extractClientIp, extractUserAgent } from '../../common/utils/client-info.util.js';
+import { parseDuration } from '../../common/utils/time.util.js';
+import { isNullOrEmpty, isNotNullOrEmpty } from '../../common/utils/validation.util.js';
+import { RedisService } from '../../redis/redis.service.js';
+import { User } from '../entities/user.entity.js';
+import { AuthService } from '../services/auth.service.js';
 
 interface OAuthTokenResponse {
   access_token?: string;

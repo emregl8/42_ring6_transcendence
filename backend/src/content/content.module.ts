@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ContentController } from './content.controller';
-import { ContentService } from './content.service';
-import { Comment } from './entities/comment.entity';
-import { Like } from './entities/like.entity';
-import { Post } from './entities/post.entity';
+import { ContentController } from './content.controller.js';
+import { ContentService } from './content.service.js';
+import { Comment } from './entities/comment.entity.js';
+import { Like } from './entities/like.entity.js';
+import { Post } from './entities/post.entity.js';
 @Module({
   imports: [TypeOrmModule.forFeature([Post, Comment, Like])],
   controllers: [ContentController],

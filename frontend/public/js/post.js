@@ -52,7 +52,7 @@
         minute: "2-digit",
       });
       metaEl.innerHTML =
-        dateStr + ' <span class="dot-separator"></span> Created at ' + timeStr;
+        dateStr + ' <span class="dot-separator"></span> ' + timeStr;
     }
 
     if (globalThis.DOMPurify) {
@@ -111,7 +111,7 @@
 
       const date = document.createElement("span");
       date.className = "comment-date";
-      date.textContent = dateStr + " at " + timeStr;
+      date.innerHTML = dateStr + ' <span class="dot-separator"></span> ' + timeStr;
 
       header.appendChild(avatar);
       header.appendChild(author);
@@ -207,13 +207,10 @@
 
   function loadPost() {
     const urlParams = new URLSearchParams(globalThis.location.search);
-    const id = urlParams.get("id");
+    const id = urlParams.get("id") || currentPostId;
     if (!id) {
-      if (currentPostId) id = currentPostId;
-      else {
-        Utils.showError("Post ID is missing.");
-        return;
-      }
+      Utils.showError("Post ID is missing.");
+      return;
     }
 
     AuthClient.loadUserProfile(function (user) {

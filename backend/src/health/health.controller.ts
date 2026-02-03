@@ -2,8 +2,8 @@ import { Controller, Get, HttpStatus, HttpException, Logger } from '@nestjs/comm
 import { ConfigService } from '@nestjs/config';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { RedisService } from '../redis/redis.service';
-import { HealthCheckResult, HealthCheckResponse } from './interfaces/health-check-result.interface';
+import { RedisService } from '../redis/redis.service.js';
+import { HealthCheckResult, HealthCheckResponse } from './interfaces/health-check-result.interface.js';
 
 @Controller('health')
 export class HealthController {

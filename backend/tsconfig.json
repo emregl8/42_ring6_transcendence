@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "NodeNext",
     "target": "ES2021",
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,

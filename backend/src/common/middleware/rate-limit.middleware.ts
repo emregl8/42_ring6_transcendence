@@ -2,10 +2,10 @@ import { createHash } from 'node:crypto';
 import * as net from 'node:net';
 import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import { REDIS_KEYS, CACHE_TTL } from '../../redis/redis.constants';
-import { RedisService } from '../../redis/redis.service';
-import { extractClientIp, extractUserAgent } from '../utils/client-info.util';
-import { isDefined } from '../utils/validation.util';
+import { REDIS_KEYS, CACHE_TTL } from '../../redis/redis.constants.js';
+import { RedisService } from '../../redis/redis.service.js';
+import { extractClientIp, extractUserAgent } from '../utils/client-info.util.js';
+import { isDefined } from '../utils/validation.util.js';
 
 @Injectable()
 export class RateLimitMiddleware implements NestMiddleware {

@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="img/transcendence.png" alt="Logo" width="150" height="150">
+  <img src="img/42-lms.png" alt="Logo" width="150" height="150">
   <h2>42 LMS Project</h2>
     <a href= https://github.com/emre-mr246/42-evaluation><img src="https://img.shields.io/badge/score-100%20%2F%20100-success?style=for-the-badge"/></a>
     <a href= https://github.com/emre-mr246/42-evaluation><img src="https://img.shields.io/badge/rank-6-magenta?style=for-the-badge"/></a>

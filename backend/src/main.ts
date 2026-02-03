@@ -3,9 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './common/filters/http-exception.filter';
-import { parseAllowedOrigins } from './common/utils/origin.util';
+import { AppModule } from './app.module.js';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter.js';
+import { parseAllowedOrigins } from './common/utils/origin.util.js';
 
 async function bootstrap(): Promise<void> {
   const isDevelopment = process.env.NODE_ENV === 'development';
@@ -88,7 +88,9 @@ async function bootstrap(): Promise<void> {
   await app.listen(port);
 }
 
-bootstrap().catch((error) => {
+try {
+  await bootstrap();
+} catch (error) {
   console.error('Fatal error during bootstrap:', error);
   process.exit(1);
-});
+}

@@ -1,7 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
-import { User } from '../../auth/entities/user.entity';
-import { Comment } from './comment.entity';
-import { Like } from './like.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany, Relation } from 'typeorm';
+import { User } from '../../auth/entities/user.entity.js';
+import { Comment } from './comment.entity.js';
+import { Like } from './like.entity.js';
 
 @Entity('posts')
 export class Post {
@@ -20,10 +20,10 @@ export class Post {
   userId!: string;
 
   @OneToMany(() => Comment, (comment) => comment.post)
-  comments!: Comment[];
+  comments!: Relation<Comment>[];
 
   @OneToMany(() => Like, (like) => like.post)
-  likes!: Like[];
+  likes!: Relation<Like>[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;

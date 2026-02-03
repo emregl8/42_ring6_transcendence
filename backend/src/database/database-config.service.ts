@@ -2,14 +2,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Injectable, Module, Global } from '@nestjs/common';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { RefreshToken } from '../auth/entities/refresh-token.entity';
-import { User } from '../auth/entities/user.entity';
-import { ConfigurationError } from '../common/errors/configuration.error';
-import { DatabaseCredentials, ApplicationConfig } from '../common/interfaces/config.interface';
-import { parseBoolean } from '../common/utils/parse-boolean.util';
-import { Comment } from '../content/entities/comment.entity';
-import { Like } from '../content/entities/like.entity';
-import { Post } from '../content/entities/post.entity';
+import { RefreshToken } from '../auth/entities/refresh-token.entity.js';
+import { User } from '../auth/entities/user.entity.js';
+import { ConfigurationError } from '../common/errors/configuration.error.js';
+import { DatabaseCredentials, ApplicationConfig } from '../common/interfaces/config.interface.js';
+import { parseBoolean } from '../common/utils/parse-boolean.util.js';
+import { Comment } from '../content/entities/comment.entity.js';
+import { Like } from '../content/entities/like.entity.js';
+import { Post } from '../content/entities/post.entity.js';
 
 @Injectable()
 export class DatabaseConfigService {

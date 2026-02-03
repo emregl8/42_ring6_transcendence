@@ -49,6 +49,7 @@ check_prerequisites() {
     fi
 
     echo "All prerequisites satisfied."
+    return 0
 }
 
 setup_hosts() {
@@ -56,6 +57,7 @@ setup_hosts() {
         echo "Adding $DOMAIN to /etc/hosts..."
         echo "127.0.0.1 $DOMAIN" | sudo tee -a /etc/hosts
     fi
+    return 0
 }
 
 create_data_directories() {
@@ -80,12 +82,13 @@ create_data_directories() {
     sudo mkdir -p "$PROJECT_ROOT/data/uploads/public"
     sudo chown -R 1000:1000 "$PROJECT_ROOT/data/uploads"
     sudo chmod -R 700 "$PROJECT_ROOT/data/uploads"
+    return 0
 }
 
 generate_env() {
     if [[ -f "$ENV_FILE" ]]; then
         echo ".env file already exists at $ENV_FILE. Skipping generation."
-        return
+        return 0
     fi
 
     if [[ ! -f "$SCRIPT_DIR/generate-env.sh" ]]; then
@@ -96,6 +99,7 @@ generate_env() {
     bash "$SCRIPT_DIR/generate-env.sh"
     echo "Press ENTER after configuring the .env file..."
     read -r
+    return 0
 }
 
 disable_traefik() {
@@ -106,6 +110,7 @@ disable_traefik() {
     if kubectl get deployment traefik -n kube-system >/dev/null 2>&1; then
         kubectl wait --for=condition=terminating pod -l app=traefik -n kube-system --timeout=30s 2>/dev/null || true
     fi
+    return 0
 }
 
 install_nginx_ingress() {
@@ -150,6 +155,7 @@ patch_nginx_default_tls() {
     else
         echo "Ingress controller already configured with default TLS secret."
     fi
+    return 0
 }
 
 build_and_load() {
@@ -170,6 +176,7 @@ build_and_load() {
 
         echo "Successfully built and loaded: $image"
     done
+    return 0
 }
 
 deploy_namespace() {
@@ -178,6 +185,7 @@ deploy_namespace() {
         echo "ERROR: Failed to create namespace" >&2
         return 1
     fi
+    return 0
 }
 
 deploy_cert_manager() {
@@ -200,6 +208,7 @@ deploy_cert_manager() {
     fi
 
     kubectl wait --for=condition=ready certificate --all -n "$NAMESPACE" --timeout=60s 2>/dev/null || true
+    return 0
 }
 
 deploy_vault() {
@@ -248,18 +257,21 @@ deploy_vault() {
         echo "ERROR: Vault pod failed to become ready" >&2
         return 1
     fi
+    return 0
 }
 
 deploy_postgres() {
     echo "Deploying PostgreSQL..."
     find k8s/postgres/ -name "*.yaml" ! -name "postgres-statefulset.yaml" -exec kubectl apply -n "$NAMESPACE" -f {} \; >/dev/null
     sed "s|{{PROJECT_ROOT}}|$PROJECT_ROOT|g" k8s/postgres/postgres-statefulset.yaml | kubectl apply -n "$NAMESPACE" -f - >/dev/null
+    return 0
 }
 
 deploy_redis() {
     echo "Deploying Redis..."
     find k8s/redis/ -name "*.yaml" ! -name "redis-statefulset.yaml" -exec kubectl apply -n "$NAMESPACE" -f {} \; >/dev/null
     sed "s|{{PROJECT_ROOT}}|$PROJECT_ROOT|g" k8s/redis/redis-statefulset.yaml | kubectl apply -n "$NAMESPACE" -f - >/dev/null
+    return 0
 }
 
 deploy_backend() {
@@ -272,6 +284,7 @@ deploy_backend() {
     find k8s/backend/ -name "*.yaml" ! -name "backend-deployment.yaml" ! -name "backend-configmap-dev.yaml" -exec kubectl apply -n "$NAMESPACE" -f {} \; >/dev/null
 
     sed "s|{{PROJECT_ROOT}}|$PROJECT_ROOT|g" k8s/backend/backend-deployment.yaml | kubectl apply -n "$NAMESPACE" -f - >/dev/null
+    return 0
 }
 
 deploy_frontend() {
@@ -280,6 +293,7 @@ deploy_frontend() {
         echo "ERROR: Failed to apply frontend manifests" >&2
         return 1
     fi
+    return 0
 }
 
 deploy_security_and_ingress() {
@@ -293,6 +307,7 @@ deploy_security_and_ingress() {
         echo "ERROR: Failed to apply ingress manifests" >&2
         return 1
     fi
+    return 0
 }
 
 deploy() {
@@ -304,6 +319,7 @@ deploy() {
     deploy_backend || return 1
     deploy_frontend || return 1
     deploy_security_and_ingress || return 1
+    return 0
 }
 
 setup_vault() {
@@ -327,6 +343,7 @@ setup_vault() {
         echo "ERROR: Vault Kubernetes secrets creation failed" >&2
         return 1
     fi
+    return 0
 }
 
 initialize_database() {
@@ -340,6 +357,7 @@ initialize_database() {
         echo "ERROR: Database initialization failed" >&2
         return 1
     fi
+    return 0
 }
 
 cleanup_stale_namespace() {
@@ -353,6 +371,7 @@ cleanup_stale_namespace() {
             sleep 2
         fi
     fi
+    return 0
 }
 
 dev() {
@@ -376,6 +395,7 @@ dev() {
     sleep 15
     echo "Access the application at:"
     echo "https://$DOMAIN"
+    return 0
 }
 
 dev

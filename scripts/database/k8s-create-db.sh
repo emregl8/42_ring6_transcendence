@@ -10,7 +10,7 @@ POD_NAME="${POD_NAME:-postgres-0}"
 echo ""
 echo "Waiting for postgres pod to be ready..."
 if ! kubectl wait --for=condition=ready pod/"$POD_NAME" -n "$NAMESPACE" --timeout=60s; then
-    echo "Error: Pod $POD_NAME is not ready in namespace $NAMESPACE"
+    echo "Error: Pod $POD_NAME is not ready in namespace $NAMESPACE" >&2
     exit 1
 fi
 

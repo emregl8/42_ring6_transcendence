@@ -1,9 +1,8 @@
 import * as fs from 'node:fs';
 import { Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Redis } from 'ioredis';
-import ioredis from 'ioredis';
-import { isNullOrEmpty } from '../common/utils/validation.util';
+import { Redis } from 'ioredis';
+import { isNullOrEmpty } from '../common/utils/validation.util.js';
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
@@ -23,13 +22,13 @@ export class RedisService implements OnModuleDestroy {
 
     const tlsOptions = this.buildTlsOptions(tlsEnabled, tlsCaPath);
 
-    this.redisClient = new ioredis({
+    this.redisClient = new Redis({
       host: isNullOrEmpty(host) ? 'localhost' : host,
       port: port !== undefined && port !== 0 ? port : 6379,
       password,
       tls: tlsOptions,
-      retryStrategy: (times) => Math.min(times * 50, 2000),
-      reconnectOnError: (err) => {
+      retryStrategy: (times: number) => Math.min(times * 50, 2000),
+      reconnectOnError: (err: Error) => {
         this.logger.error(`Redis reconnect on error: ${err.message}`);
         return true;
       },

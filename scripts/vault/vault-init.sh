@@ -35,9 +35,11 @@ if [[ "$INIT_STATUS" == "true" ]] && [[ ! -f "${VAULT_KEYS_FILE}" ]]; then
 	exit 1
 fi
 
-exec_vault "${NAMESPACE}" "${PODS[0]}" "VAULT_CACERT=/vault/tls/ca.crt vault operator init -key-shares=5 -key-threshold=3 -format=json" >${VAULT_KEYS_FILE}
-chmod 600 ${VAULT_KEYS_FILE}
-echo "Vault initialized."
+if [[ "$INIT_STATUS" == "false" ]]; then
+	exec_vault "${NAMESPACE}" "${PODS[0]}" "VAULT_CACERT=/vault/tls/ca.crt vault operator init -key-shares=5 -key-threshold=3 -format=json" >${VAULT_KEYS_FILE}
+	chmod 600 ${VAULT_KEYS_FILE}
+	echo "Vault initialized."
+fi
 
 ROOT_TOKEN=$(get_json_value '.root_token // empty')
 ADMIN_TOKEN=$(get_json_value '.admin_token // empty')
@@ -65,7 +67,7 @@ if [[ -n "$UNSEAL_KEY_1" ]] && [[ -n "$UNSEAL_KEY_2" ]] && [[ -n "$UNSEAL_KEY_3"
 fi
 
 if [[ -z "$UNSEAL_KEY_1" ]] || [[ -z "$UNSEAL_KEY_2" ]] || [[ -z "$UNSEAL_KEY_3" ]]; then
-	echo "ERROR: Unseal keys not found in ${VAULT_KEYS_FILE}!"
+	echo "ERROR: Unseal keys not found in ${VAULT_KEYS_FILE}!" >&2
 	exit 1
 fi
 
@@ -74,7 +76,7 @@ exec_vault "${NAMESPACE}" "${PODS[0]}" "VAULT_CACERT=/vault/tls/ca.crt vault ope
 exec_vault "${NAMESPACE}" "${PODS[0]}" "VAULT_CACERT=/vault/tls/ca.crt vault operator unseal '$UNSEAL_KEY_3'" >/dev/null
 
 if [[ -z "$ROOT_TOKEN" ]]; then
-	echo "ERROR: Root token not found in ${VAULT_KEYS_FILE}!"
+	echo "ERROR: Root token not found in ${VAULT_KEYS_FILE}!" >&2
 	exit 1
 fi
 
@@ -127,14 +129,14 @@ EOF"
 ADMIN_TOKEN_RESPONSE=$(exec_vault_with_token "${NAMESPACE}" "${PODS[0]}" "$ROOT_TOKEN" "vault token create -orphan -policy=admin-policy -period=30m -display-name='vault-admin-token' -format=json" 2>/dev/null)
 
 if [[ $? -ne 0 ]]; then
-	echo "ERROR: Failed to create admin token!"
+	echo "ERROR: Failed to create admin token!" >&2
 	exit 1
 fi
 
 ADMIN_TOKEN=$(echo "$ADMIN_TOKEN_RESPONSE" | jq -r '.auth.client_token')
 
 if [[ -z "$ADMIN_TOKEN" ]] || [[ "$ADMIN_TOKEN" == "null" ]]; then
-	echo "ERROR: Admin token creation failed!"
+	echo "ERROR: Admin token creation failed!" >&2
 	exit 1
 fi
 

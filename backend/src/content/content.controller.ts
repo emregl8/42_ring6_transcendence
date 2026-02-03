@@ -24,14 +24,14 @@ import { Request } from 'express';
 import { diskStorage } from 'multer';
 import sharp from 'sharp';
 import { v4 as uuidv4 } from 'uuid';
-import { User } from '../auth/entities/user.entity';
-import { ContentService } from './content.service';
-import { CreateCommentDto } from './dto/create-comment.dto';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
-import { Comment as CommentEntity } from './entities/comment.entity';
-import { Post as PostEntity } from './entities/post.entity';
-import { PostRateLimitGuard } from './guards/post-rate-limit.guard';
+import { User } from '../auth/entities/user.entity.js';
+import { ContentService } from './content.service.js';
+import { CreateCommentDto } from './dto/create-comment.dto.js';
+import { CreatePostDto } from './dto/create-post.dto.js';
+import { UpdatePostDto } from './dto/update-post.dto.js';
+import { Comment as CommentEntity } from './entities/comment.entity.js';
+import { Post as PostEntity } from './entities/post.entity.js';
+import { PostRateLimitGuard } from './guards/post-rate-limit.guard.js';
 
 interface AuthenticatedRequest extends Request {
   user: User;

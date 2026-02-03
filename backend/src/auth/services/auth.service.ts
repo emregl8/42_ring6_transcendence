@@ -4,12 +4,12 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AuditLogService } from '../../common/services/audit-log.service';
-import { isDefined, isNullOrEmpty } from '../../common/utils/validation.util';
-import { REDIS_KEYS, CACHE_TTL } from '../../redis/redis.constants';
-import { RedisService } from '../../redis/redis.service';
-import { RefreshToken } from '../entities/refresh-token.entity';
-import { User } from '../entities/user.entity';
+import { AuditLogService } from '../../common/services/audit-log.service.js';
+import { isDefined, isNullOrEmpty } from '../../common/utils/validation.util.js';
+import { REDIS_KEYS, CACHE_TTL } from '../../redis/redis.constants.js';
+import { RedisService } from '../../redis/redis.service.js';
+import { RefreshToken } from '../entities/refresh-token.entity.js';
+import { User } from '../entities/user.entity.js';
 
 interface OAuth42Profile {
   intra42Id: string;

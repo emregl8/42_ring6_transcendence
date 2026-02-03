@@ -1,24 +1,27 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from './auth/auth.module';
-import { CommonModule } from './common/common.module';
-import { AllExceptionsFilter } from './common/filters/http-exception.filter';
-import { DatabaseCredentials, ApplicationConfig } from './common/interfaces/config.interface';
-import { CsrfMiddleware } from './common/middleware/csrf.middleware';
-import { parseEnvInt, parseEnvBool } from './common/utils/config.util';
-import { ContentModule } from './content/content.module';
-import { DatabaseModule, DatabaseConfigService } from './database/database-config.service';
-import { HealthModule } from './health/health.module';
-import { RedisModule } from './redis/redis.module';
+import { AuthModule } from './auth/auth.module.js';
+import { CommonModule } from './common/common.module.js';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter.js';
+import { DatabaseCredentials, ApplicationConfig } from './common/interfaces/config.interface.js';
+import { CsrfMiddleware } from './common/middleware/csrf.middleware.js';
+import { parseEnvInt, parseEnvBool } from './common/utils/config.util.js';
+import { ContentModule } from './content/content.module.js';
+import { DatabaseModule, DatabaseConfigService } from './database/database-config.service.js';
+import { HealthModule } from './health/health.module.js';
+import { RedisModule } from './redis/redis.module.js';
+
+const ROOT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: path.join(__dirname, '..', 'uploads', 'public'),
+      rootPath: path.join(ROOT_DIR, '..', 'uploads', 'public'),
       serveRoot: '/uploads',
       serveStaticOptions: {
         setHeaders: (res) => {

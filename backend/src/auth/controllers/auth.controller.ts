@@ -2,11 +2,11 @@ import { Controller, Get, Req, Res, UseGuards, Logger, Post, UnauthorizedExcepti
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { Request, Response } from 'express';
-import { extractClientIp, extractUserAgent } from '../../common/utils/client-info.util';
-import { parseDuration } from '../../common/utils/time.util';
-import { isNullOrEmpty, isNotNullOrEmpty } from '../../common/utils/validation.util';
-import { User } from '../entities/user.entity';
-import { AuthService } from '../services/auth.service';
+import { extractClientIp, extractUserAgent } from '../../common/utils/client-info.util.js';
+import { parseDuration } from '../../common/utils/time.util.js';
+import { isNullOrEmpty, isNotNullOrEmpty } from '../../common/utils/validation.util.js';
+import { User } from '../entities/user.entity.js';
+import { AuthService } from '../services/auth.service.js';
 
 interface AuthenticatedRequest extends Request {
   user?: User;

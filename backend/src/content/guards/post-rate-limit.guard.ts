@@ -1,7 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
-import { User } from '../../auth/entities/user.entity';
-import { REDIS_KEYS, CACHE_TTL } from '../../redis/redis.constants';
-import { RedisService } from '../../redis/redis.service';
+import { User } from '../../auth/entities/user.entity.js';
+import { REDIS_KEYS, CACHE_TTL } from '../../redis/redis.constants.js';
+import { RedisService } from '../../redis/redis.service.js';
 
 @Injectable()
 export class PostRateLimitGuard implements CanActivate {

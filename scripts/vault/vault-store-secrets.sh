@@ -8,7 +8,7 @@ VAULT_KEYS_FILE=".vault-keys.json"
 ENV_FILE=".env"
 
 if [[ ! -f "${VAULT_KEYS_FILE}" ]]; then
-    echo "ERROR: Vault keys file not found"
+    echo "ERROR: Vault keys file not found" >&2
     exit 1
 fi
 VAULT_TOKEN=$(cat ${VAULT_KEYS_FILE} | jq -r '.admin_token')
