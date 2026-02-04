@@ -1,19 +1,22 @@
+import { isNotNullOrEmpty } from './validation.util.js';
+
 export function parseBoolean(value: unknown, fieldName?: string): boolean {
-  const errorMessage =
-    fieldName !== undefined && fieldName !== null && fieldName !== ''
-      ? `Failed to parse ${fieldName} as boolean`
-      : 'Failed to parse value as boolean';
+  const errorMessage = isNotNullOrEmpty(fieldName) ? `Failed to parse ${fieldName} as boolean` : 'Failed to parse value as boolean';
 
   if (typeof value === 'boolean') {
     return value;
   }
 
   if (value === null || value === undefined || value === '') {
-    throw new Error(`${errorMessage}: value is null, undefined, or empty`);
+    throw new TypeError(`${errorMessage}: value is null, undefined, or empty`);
   }
 
   if (typeof value === 'object') {
-    throw new Error(`${errorMessage}: objects cannot be parsed as boolean`);
+    throw new TypeError(`${errorMessage}: objects cannot be parsed as boolean`);
+  }
+
+  if (typeof value !== 'string' && typeof value !== 'number') {
+    throw new TypeError(`${errorMessage}: unsupported value type for boolean parsing`);
   }
 
   const str = String(value).trim().toLowerCase();
@@ -27,5 +30,5 @@ export function parseBoolean(value: unknown, fieldName?: string): boolean {
     return false;
   }
 
-  throw new Error(`${errorMessage}: unsupported value "${str}"`);
+  throw new TypeError(`${errorMessage}: unsupported value "${str}"`);
 }

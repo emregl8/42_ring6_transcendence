@@ -14,10 +14,13 @@ fi
 VAULT_TOKEN=$(cat ${VAULT_KEYS_FILE} | jq -r '.admin_token')
 exec_vault() {
     kubectl exec -n "${NAMESPACE}" "${VAULT_POD}" -- sh -c "export VAULT_TOKEN='${VAULT_TOKEN}' VAULT_ADDR='https://127.0.0.1:8200' VAULT_CACERT='/vault/tls/ca.crt' && $*"
+    return $?
 }
 
 get_env_val() {
-    grep "^$1=" "${ENV_FILE}" | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d '\r' | sed 's/[[:space:]]*$//'
+    local key="$1"
+    grep "^$key=" "${ENV_FILE}" | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d '\r' | sed 's/[[:space:]]*$//'
+    return $?
 }
 
 echo "Storing secrets..."

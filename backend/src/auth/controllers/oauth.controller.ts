@@ -236,7 +236,7 @@ export class OAuthController {
       maxAge: this.jwtExpiresIn,
     });
 
-    if (refreshToken !== undefined && refreshToken !== '') {
+    if (isNotNullOrEmpty(refreshToken)) {
       res.cookie('refresh_token', refreshToken, {
         ...commonOptions,
         maxAge: 30 * 24 * 3600 * 1000,

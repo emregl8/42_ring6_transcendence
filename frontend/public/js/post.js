@@ -111,7 +111,8 @@
 
       const date = document.createElement("span");
       date.className = "comment-date";
-      date.innerHTML = dateStr + ' <span class="dot-separator"></span> ' + timeStr;
+      date.innerHTML =
+        dateStr + ' <span class="dot-separator"></span> ' + timeStr;
 
       header.appendChild(avatar);
       header.appendChild(author);

@@ -14,6 +14,7 @@ spec:
       labels:
         app: postgres
     spec:
+      automountServiceAccountToken: false
       securityContext:
         seccompProfile:
           type: RuntimeDefault
@@ -57,6 +58,15 @@ spec:
           readOnly: true
         - name: postgres-tls
           mountPath: /tls
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+            ephemeral-storage: "10Mi"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+            ephemeral-storage: "20Mi"
       containers:
       - name: postgres
         image: transcendence-postgres:latest
@@ -97,9 +107,11 @@ spec:
           requests:
             memory: "512Mi"
             cpu: "500m"
+            ephemeral-storage: "100Mi"
           limits:
             memory: "1Gi"
             cpu: "1000m"
+            ephemeral-storage: "200Mi"
         livenessProbe:
           exec:
             command:

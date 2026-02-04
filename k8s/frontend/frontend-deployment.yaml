@@ -13,6 +13,7 @@ spec:
       labels:
         app: frontend
     spec:
+      automountServiceAccountToken: false
       securityContext:
         seccompProfile:
           type: RuntimeDefault
@@ -42,9 +43,11 @@ spec:
           requests:
             memory: "64Mi"
             cpu: "100m"
+            ephemeral-storage: "64Mi"
           limits:
             memory: "128Mi"
             cpu: "200m"
+            ephemeral-storage: "128Mi"
         livenessProbe:
           httpGet:
             path: /
@@ -58,8 +61,11 @@ spec:
           periodSeconds: 5
       volumes:
       - name: cache
-        emptyDir: {}
+        emptyDir:
+          sizeLimit: "64Mi"
       - name: run
-        emptyDir: {}
+        emptyDir:
+          sizeLimit: "32Mi"
       - name: tmp
-        emptyDir: {}
+        emptyDir:
+          sizeLimit: "32Mi"

@@ -1,5 +1,6 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { isNotNullOrEmpty } from '../utils/validation.util.js';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -69,7 +70,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       path: this.sanitizeUrl(request.url),
       method: request.method,
       message: exception instanceof Error ? exception.message : message,
-      ...(stack !== undefined ? { stack } : {}),
+      ...(isNotNullOrEmpty(stack) && { stack }),
     };
   }
 

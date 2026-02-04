@@ -14,12 +14,14 @@ get_vault_token() {
 	fi
 
 	echo "$ADMIN_TOKEN"
+	return 0
 }
 
 exec_vault() {
 	local namespace="$1" pod="$2"
 	shift 2
 	kubectl exec -n "$namespace" "$pod" -- sh -c "$*" 2>/dev/null
+	return $?
 }
 
 exec_vault_with_token() {
@@ -30,6 +32,7 @@ exec_vault_with_token() {
 		return 1
 	fi
 	kubectl exec -n "$namespace" "$pod" -- sh -c "export VAULT_TOKEN='${token}' VAULT_CACERT=/vault/tls/ca.crt && $*" 2>/dev/null
+	return $?
 }
 
 validate_token() {
@@ -38,6 +41,7 @@ validate_token() {
 		return 1
 	fi
 	exec_vault_with_token "$namespace" "$pod" "$token" "vault token lookup -format=json" >/dev/null 2>&1
+	return $?
 }
 
 get_admin_token() {
@@ -55,29 +59,34 @@ get_admin_token() {
 	fi
 
 	echo "$token"
+	return 0
 }
 
 vault_exec_cmd() {
 	local namespace="$1" pod="$2" token="$3"
 	shift 3
 	exec_vault_with_token "$namespace" "$pod" "$token" "$*"
+	return $?
 }
 
 vault_kv_put() {
 	local namespace="$1" pod="$2" token="$3" path="$4"
 	shift 4
 	vault_exec_cmd "$namespace" "$pod" "$token" "vault kv put $path $*"
+	return $?
 }
 
 vault_kv_get() {
 	local namespace="$1" pod="$2" token="$3" path="$4"
 	vault_exec_cmd "$namespace" "$pod" "$token" "vault kv get -format=json $path"
+	return $?
 }
 
 vault_write() {
 	local namespace="$1" pod="$2" token="$3" path="$4"
 	shift 4
 	vault_exec_cmd "$namespace" "$pod" "$token" "vault write $path $*"
+	return $?
 }
 
 vault_policy_write() {
@@ -85,4 +94,5 @@ vault_policy_write() {
 	exec_vault_with_token "$namespace" "$pod" "$token" "vault policy write $policy_name - <<EOF
 $policy_content
 EOF"
+	return $?
 }

@@ -21,6 +21,7 @@ get_pod_uptime() {
     else
         echo "N/A"
     fi
+    return 0
 }
 
 get_pod_status() {
@@ -73,6 +74,7 @@ get_pod_status() {
         pod_uptime=$(get_pod_uptime "$name")
         printf "% -15s %-8s %-12s %-8s %-8s %s\n" "$short_name" "$ready" "$status" "$restarts" "$pod_uptime" "$status_icon"
     done <<< "$pods_output"
+    return 0
 }
 
 while true; do

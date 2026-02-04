@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { isNotNullOrEmpty } from '../utils/validation.util.js';
 
 @Injectable()
 export class AuditLogService implements OnModuleInit {
@@ -29,12 +30,12 @@ export class AuditLogService implements OnModuleInit {
 
     const detailStr = Object.entries(rest)
       .map(([k, v]) => {
-        const value = typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v);
+        const value = typeof v === 'string' ? v : (JSON.stringify(v) ?? String(v));
         return `${k}: ${value}`;
       })
       .join(' | ');
 
-    const typeStr = typeof typeValue === 'object' && typeValue !== null ? JSON.stringify(typeValue) : String(typeValue);
+    const typeStr = typeof typeValue === 'string' ? typeValue : (JSON.stringify(typeValue) ?? String(typeValue));
     return `${typeStr} | ${detailStr}`;
   }
 
@@ -74,7 +75,7 @@ export class AuditLogService implements OnModuleInit {
   }
 
   logSystemChange(action: string, object: string, userId?: string): void {
-    const userInfo = userId !== undefined && userId !== null && userId !== '' ? { UserID: userId } : { System: true };
+    const userInfo = isNotNullOrEmpty(userId) ? { UserID: userId } : { System: true };
     this.logger.log(
       this.formatLog('SYSTEM_CHANGE', {
         ...userInfo,

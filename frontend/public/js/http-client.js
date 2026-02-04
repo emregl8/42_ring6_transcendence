@@ -5,7 +5,7 @@
     opts.credentials = "include";
     opts.headers = {
       Accept: "application/json",
-      ...(opts.headers || {}),
+      ...opts.headers,
     };
     const csrfToken = Utils.getCookie("XSRF-TOKEN");
     if (csrfToken) {

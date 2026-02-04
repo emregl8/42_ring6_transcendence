@@ -11,7 +11,7 @@ VAULT_KEYS_FILE=".vault-keys.json"
 if [[ -f "${VAULT_KEYS_FILE}" ]]; then
 	CURRENT_PERM=$(stat -c '%a' "${VAULT_KEYS_FILE}" 2>/dev/null || stat -f '%A' "${VAULT_KEYS_FILE}" 2>/dev/null)
 	if [[ "$CURRENT_PERM" != "600" ]]; then
-		echo "ERROR: ${VAULT_KEYS_FILE} has insecure permissions ($CURRENT_PERM). Setting to 600..."
+		echo "ERROR: ${VAULT_KEYS_FILE} has insecure permissions ($CURRENT_PERM). Setting to 600..." >&2
 		chmod 600 "${VAULT_KEYS_FILE}"
 	fi
 fi
@@ -28,10 +28,11 @@ INIT_STATUS=$(exec_vault "${NAMESPACE}" "${PODS[0]}" "VAULT_CACERT=/vault/tls/ca
 get_json_value() {
 	field="$1"
 	jq -r "$field" "${VAULT_KEYS_FILE}" 2>/dev/null | tr -d '\r\n'
+	return $?
 }
 
 if [[ "$INIT_STATUS" == "true" ]] && [[ ! -f "${VAULT_KEYS_FILE}" ]]; then
-	echo "ERROR: Vault is initialized but keys file is missing!"
+	echo "ERROR: Vault is initialized but keys file is missing!" >&2
 	exit 1
 fi
 
@@ -149,8 +150,8 @@ kubectl create secret generic vault-admin-token \
 
 ADMIN_TEST=$(exec_vault_with_token "${NAMESPACE}" "${PODS[0]}" "$ADMIN_TOKEN" "vault token lookup -format=json" 2>&1)
 if echo "$ADMIN_TEST" | grep -q "error"; then
-	echo "ERROR: Admin token validation failed; root token will not be revoked"
-	echo "$ADMIN_TEST"
+	echo "ERROR: Admin token validation failed; root token will not be revoked" >&2
+	echo "$ADMIN_TEST" >&2
 	exit 1
 fi
 

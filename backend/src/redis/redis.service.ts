@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import { Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis';
-import { isNullOrEmpty } from '../common/utils/validation.util.js';
+import { isNullOrEmpty, isNotNullOrEmpty } from '../common/utils/validation.util.js';
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
@@ -23,7 +23,7 @@ export class RedisService implements OnModuleDestroy {
     const tlsOptions = this.buildTlsOptions(tlsEnabled, tlsCaPath);
 
     this.redisClient = new Redis({
-      host: isNullOrEmpty(host) ? 'localhost' : host,
+      host: isNotNullOrEmpty(host) ? host : 'localhost',
       port: port !== undefined && port !== 0 ? port : 6379,
       password,
       tls: tlsOptions,
@@ -59,10 +59,10 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
-    if (ttlSeconds !== undefined && ttlSeconds !== 0) {
-      await this.redisClient.set(key, value, 'EX', ttlSeconds);
-    } else {
+    if (ttlSeconds === undefined || ttlSeconds === 0) {
       await this.redisClient.set(key, value);
+    } else {
+      await this.redisClient.set(key, value, 'EX', ttlSeconds);
     }
   }
 

@@ -51,7 +51,7 @@ export class AuthService {
   private getConfigTtl(): number {
     const rawDays = this.configService.get<string>('app.REFRESH_TOKEN_TTL_DAYS');
     const days = Number(rawDays ?? 30);
-    return (!Number.isFinite(days) || days <= 0 ? 30 : Math.floor(days)) * 24 * 3600 * 1000;
+    return (Number.isFinite(days) && days > 0 ? Math.floor(days) : 30) * 24 * 3600 * 1000;
   }
 
   private hashToken(token: string): string {
