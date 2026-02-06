@@ -92,8 +92,6 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    AuthClient.loadUserProfile(function () {
-      loadMyPosts();
-    });
+    loadMyPosts();
   });
 })();

@@ -127,6 +127,15 @@ export class AuthService {
     return user;
   }
 
+  async findByUsername(username: string): Promise<User | null> {
+    const user = await this.userRepository.findOne({ where: { username } });
+    if (isDefined(user)) {
+      const cacheKey = REDIS_KEYS.userCache(user.id);
+      await this.redisService.set(cacheKey, JSON.stringify(user), CACHE_TTL.USER).catch(() => {});
+    }
+    return user;
+  }
+
   private validateCachedUser(cached: string, expectedId: string): User | null {
     try {
       const parsed = JSON.parse(cached) as Record<string, unknown>;

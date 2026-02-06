@@ -53,6 +53,23 @@
     if (logoutBtn) {
       logoutBtn.addEventListener('click', AuthClient.logout);
     }
-    AuthClient.loadUserProfile(renderProfile);
+
+    const urlParams = new URLSearchParams(globalThis.location.search);
+    const username = urlParams.get('username');
+
+    if (username) {
+      if (logoutBtn) logoutBtn.style.display = 'none';
+      AuthClient.request('/api/auth/users/' + encodeURIComponent(username))
+        .then(function (res) {
+          if (!res.ok) throw new Error('User not found');
+          return res.json();
+        })
+        .then(renderProfile)
+        .catch(function (err) {
+          Utils.showError('User not found.');
+        });
+    } else {
+      AuthClient.loadUserProfile(renderProfile);
+    }
   });
 })();

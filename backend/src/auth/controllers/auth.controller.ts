@@ -1,4 +1,4 @@
-import { Controller, Get, Req, Res, UseGuards, Logger, Post, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Req, Res, UseGuards, Logger, Post, UnauthorizedException, NotFoundException, Param } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { Request, Response } from 'express';
@@ -33,6 +33,16 @@ export class SessionController {
   @UseGuards(AuthGuard('jwt'))
   getProfile(@Req() req: AuthenticatedRequest): User | undefined {
     return req.user;
+  }
+
+  @Get('users/:username')
+  @UseGuards(AuthGuard('jwt'))
+  async getUserByUsername(@Param('username') username: string): Promise<User> {
+    const user = await this.authService.findByUsername(username);
+    if (user === null || user === undefined) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
   @Post('logout')

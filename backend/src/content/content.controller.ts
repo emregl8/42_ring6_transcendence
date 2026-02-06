@@ -17,6 +17,7 @@ import {
   InternalServerErrorException,
   BadRequestException,
   OnModuleInit,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -118,6 +119,14 @@ export class ContentController implements OnModuleInit {
   @Get()
   findAll(): Promise<PostEntity[]> {
     return this.contentService.findAll();
+  }
+
+  @Get('search')
+  async search(@Query('q') q: string): Promise<{ posts: PostEntity[]; users: User[] }> {
+    if (q === undefined || q === null || q.trim() === '') {
+      return { posts: [], users: [] };
+    }
+    return this.contentService.search(q.trim());
   }
 
   @Get('my-posts')

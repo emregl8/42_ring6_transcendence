@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import sanitizeHtml from 'sanitize-html';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { User } from '../auth/entities/user.entity.js';
 import { isDefined } from '../common/utils/validation.util.js';
 import { CreateCommentDto } from './dto/create-comment.dto.js';
@@ -19,7 +19,9 @@ export class ContentService {
     @InjectRepository(Comment)
     private readonly commentsRepository: Repository<Comment>,
     @InjectRepository(Like)
-    private readonly likesRepository: Repository<Like>
+    private readonly likesRepository: Repository<Like>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>
   ) {}
 
   async create(createPostDto: CreatePostDto, user: User, imageUrl?: string): Promise<Post> {
@@ -40,7 +42,27 @@ export class ContentService {
       order: {
         createdAt: 'DESC',
       },
+      relations: ['user'],
     });
+  }
+
+  async search(query: string): Promise<{ posts: Post[]; users: User[] }> {
+    const posts = await this.postsRepository.find({
+      where: [{ title: ILike(`%${query}%`) }, { content: ILike(`%${query}%`) }],
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['user'],
+    });
+
+    const users = await this.usersRepository.find({
+      where: [{ username: ILike(`%${query}%`) }, { firstName: ILike(`%${query}%`) }, { lastName: ILike(`%${query}%`) }],
+      order: {
+        username: 'ASC',
+      },
+    });
+
+    return { posts, users };
   }
 
   async findOne(id: string): Promise<Post | null> {

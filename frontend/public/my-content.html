@@ -7,11 +7,6 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #ffffff; color: #333; }
-        .header { background-color: #ffffff; padding: 1.5rem 2rem; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { font-size: 1.8rem; color: #333; }
-        .nav-links { display: flex; align-items: center; gap: 1.5rem; }
-        .nav-link { color: #333; text-decoration: none; font-weight: 500; }
-        .nav-link:hover { text-decoration: underline; }
         .container { max-width: 800px; margin: 3rem auto; padding: 0 2rem; }
         .post-card { background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; transition: box-shadow 0.2s; display: flex; justify-content: space-between; align-items: start; }
         .post-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
@@ -33,22 +28,7 @@
     <script src="/js/token-manager.js"></script>
     <script src="/js/auth-client.js"></script>
     <script src="/js/purify.min.js"></script>
-
-    <div class="header">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <h1><a href="/dashboard.html" style="color: #333; text-decoration: none;">42 LMS</a></h1>
-            <span style="color: #e0e0e0; font-size: 1.5rem;">|</span>
-            <a href="/my-content.html" class="nav-link">My Content</a>
-        </div>
-        <div class="nav-links">
-            <div class="header-user" id="headerUser" style="display: flex; align-items: center; gap: 1rem;">
-                <a href="/profile.html" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #333; font-weight: 500;">
-                    <span id="headerUsername">Loading...</span>
-                    <img id="headerAvatar" src="" alt="" style="width: 32px; height: 32px; border-radius: 50%; background: #eee;">
-                </a>
-            </div>
-        </div>
-    </div>
+    <script src="/js/header.js"></script>
 
     <div class="container">
         <div class="error-message" id="errorMessage"></div>

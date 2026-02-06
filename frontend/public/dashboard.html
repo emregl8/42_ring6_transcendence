@@ -15,18 +15,6 @@
             background-color: #ffffff;
             color: #333;
         }
-        .header {
-            background-color: #ffffff;
-            padding: 1.5rem 2rem;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .header h1 {
-            font-size: 1.8rem;
-            color: #333;
-        }
         .container {
             max-width: 800px;
             margin: 3rem auto;
@@ -104,23 +92,12 @@
     <script src="/js/token-manager.js"></script>
     <script src="/js/auth-client.js"></script>
     <script src="/js/purify.min.js"></script>
-    <div class="header">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <h1><a href="/dashboard.html" style="color: #333; text-decoration: none;">42 LMS</a></h1>
-            <span style="color: #e0e0e0; font-size: 1.5rem;">|</span>
-            <a href="/my-content.html" style="color: #333; text-decoration: none; font-weight: 500;">My Content</a>
-        </div>
-        <div class="header-user" id="headerUser" style="display: flex; align-items: center; gap: 1rem;">
-            <a href="/profile" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #333; font-weight: 500;">
-                <span id="headerUsername">Loading...</span>
-                <img id="headerAvatar" src="" alt="" style="width: 32px; height: 32px; border-radius: 50%; background: #eee;">
-            </a>
-        </div>
-    </div>
+    <script src="/js/header.js"></script>
+
     <div class="container">
         <div class="error-message" id="errorMessage"></div>
 
-        <div class="content-feed">
+        <div class="content-feed" id="mainFeed">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h2 style="font-size: 1.5rem; color: #333;">Learning Feed</h2>
                 <a href="/editor.html" style="background-color: #333; color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 4px; font-weight: 500; font-size: 0.95rem;">Create Content</a>
