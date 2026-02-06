@@ -1,5 +1,5 @@
 (function () {
-  "use strict";
+  'use strict';
   let refreshPromise = null;
   const MAX_RETRY = 1;
 
@@ -29,7 +29,7 @@
       if (options._retryCount >= MAX_RETRY) {
         forceLogout();
 
-        throw new Error("Unauthorized");
+        throw new Error('Unauthorized');
       }
 
       options._retryCount++;
@@ -38,7 +38,7 @@
         if (!success) {
           forceLogout();
 
-          throw new Error("Token refresh failed");
+          throw new Error('Token refresh failed');
         }
 
         return HttpClient.request(url, options);
@@ -50,41 +50,41 @@
     TokenManager.stop();
 
     const headers = {
-      "X-Requested-With": "XMLHttpRequest",
+      'X-Requested-With': 'XMLHttpRequest',
     };
 
-    const csrfToken = Utils.getCookie("XSRF-TOKEN");
+    const csrfToken = Utils.getCookie('XSRF-TOKEN');
 
     if (csrfToken) {
-      headers["X-XSRF-TOKEN"] = csrfToken;
+      headers['X-XSRF-TOKEN'] = csrfToken;
     }
-    fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include",
+    fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
       headers: headers,
     })
       .catch(function (err) {})
       .finally(function () {
-        globalThis.location.replace("/");
+        globalThis.location.replace('/');
       });
   }
 
   function loadUserProfile(callback) {
-    authenticatedRequest("/api/auth/me", {
-      headers: { Accept: "application/json" },
+    authenticatedRequest('/api/auth/me', {
+      headers: { Accept: 'application/json' },
     })
       .then(function (res) {
         if (!res || !res.ok) {
-          throw new Error("Profile request failed");
+          throw new Error('Profile request failed');
         }
         return res.json();
       })
       .then(function (user) {
-        const usernameEl = document.getElementById("headerUsername");
-        const avatarEl = document.getElementById("headerAvatar");
+        const usernameEl = document.getElementById('headerUsername');
+        const avatarEl = document.getElementById('headerAvatar');
         if (usernameEl) usernameEl.textContent = user.username;
         if (avatarEl) {
-          avatarEl.src = user.avatar || "/img/default-avatar.png";
+          avatarEl.src = user.avatar || '/img/default-avatar.png';
         }
         if (TokenManager.start) {
           TokenManager.start();
@@ -92,7 +92,7 @@
         if (callback) callback(user);
       })
       .catch(function (err) {
-        console.error("Failed to load user profile:", err);
+        console.error('Failed to load user profile:', err);
       });
   }
 

@@ -18,6 +18,7 @@ interface OAuth42Profile {
   firstName: string;
   lastName: string;
   avatar?: string;
+  projects?: object[];
 }
 
 @Injectable()
@@ -88,10 +89,7 @@ export class AuthService {
         .insert()
         .into(User)
         .values(userData)
-        .orUpdate({
-          conflict_target: ['intra_42_id'],
-          overwrite: ['username', 'email', 'first_name', 'last_name', 'avatar'],
-        })
+        .orUpdate(['username', 'email', 'first_name', 'last_name', 'avatar', 'projects'], ['intra_42_id'])
         .execute();
 
       const user = await this.userRepository.findOne({ where: { intra42Id: profile.intra42Id } });
@@ -200,44 +198,65 @@ export class AuthService {
     const providedHash = this.hashToken(providedToken);
     const cacheKey = REDIS_KEYS.refreshToken(providedHash);
 
-    let cachedData: { userId: string; revoked: boolean } | null = null;
-    try {
-      const cached = await this.redisService.get(cacheKey);
-      if (isDefined(cached)) {
-        cachedData = JSON.parse(cached);
-      }
-    } catch {}
-
-    let user: User | null = null;
+    const cachedUser = await this.getCachedRefreshTokenUser(cacheKey);
+    let user = cachedUser;
     let existingToken: RefreshToken | null = null;
 
-    if (isDefined(cachedData) && cachedData.revoked === false) {
-      user = await this.findUserById(cachedData.userId);
-    }
-
     if (user === null || user === undefined) {
-      existingToken = await this.refreshTokenRepository.findOne({ where: { tokenHash: providedHash }, relations: ['user'] });
-      if (existingToken === null || existingToken === undefined) {
-        throw new UnauthorizedException('Invalid refresh token');
-      }
-      if (existingToken.revoked) {
-        throw new UnauthorizedException('Refresh token revoked');
-      }
-      if (existingToken.expiresAt.getTime() < Date.now()) {
-        throw new UnauthorizedException('Refresh token expired');
-      }
-      user = existingToken.user;
+      const dbResult = await this.getRefreshTokenFromDb(providedHash);
+      user = dbResult.user;
+      existingToken = dbResult.token;
     }
 
     if (user === null || user === undefined) {
       throw new UnauthorizedException('Invalid refresh token state');
     }
 
+    return this.rotateToken(user, providedHash, cacheKey, existingToken, clientIp, userAgent);
+  }
+
+  private async getCachedRefreshTokenUser(cacheKey: string): Promise<User | null> {
+    try {
+      const cached = await this.redisService.get(cacheKey);
+      if (isDefined(cached)) {
+        const cachedData = JSON.parse(cached);
+        if (cachedData.revoked === false) {
+          return await this.findUserById(cachedData.userId);
+        }
+      }
+    } catch {}
+    return null;
+  }
+
+  private async getRefreshTokenFromDb(tokenHash: string): Promise<{ user: User; token: RefreshToken }> {
+    const existingToken = await this.refreshTokenRepository.findOne({ where: { tokenHash }, relations: ['user'] });
+
+    if (existingToken === null || existingToken === undefined) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    if (existingToken.revoked) {
+      throw new UnauthorizedException('Refresh token revoked');
+    }
+    if (existingToken.expiresAt.getTime() < Date.now()) {
+      throw new UnauthorizedException('Refresh token expired');
+    }
+
+    return { user: existingToken.user, token: existingToken };
+  }
+
+  private async rotateToken(
+    user: User,
+    oldHash: string,
+    cacheKey: string,
+    existingToken: RefreshToken | null,
+    clientIp?: string,
+    userAgent?: string
+  ): Promise<{ user: User; newRefreshToken: string }> {
     const { token: newRaw } = await this.createRefreshToken(user, clientIp, userAgent);
     const newHash = this.hashToken(newRaw);
 
     if (existingToken === null || existingToken === undefined) {
-      await this.refreshTokenRepository.update({ tokenHash: providedHash }, { revoked: true, replacedBy: newHash });
+      await this.refreshTokenRepository.update({ tokenHash: oldHash }, { revoked: true, replacedBy: newHash });
     } else {
       existingToken.revoked = true;
       existingToken.replacedBy = newHash;

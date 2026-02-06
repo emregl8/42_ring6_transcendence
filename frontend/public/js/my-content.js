@@ -1,60 +1,55 @@
 (function () {
-  "use strict";
+  'use strict';
 
   function renderPosts(posts) {
-    const container = document.getElementById("postsContainer");
-    container.innerHTML = "";
+    const container = document.getElementById('postsContainer');
+    container.innerHTML = '';
 
     if (posts.length === 0) {
-      container.innerHTML =
-        '<div style="color: #666; font-style: italic;">You haven\'t created any content yet.</div>';
+      container.innerHTML = '<div style="color: #666; font-style: italic;">You haven\'t created any content yet.</div>';
       return;
     }
 
     posts.forEach(function (post) {
-      const card = document.createElement("div");
-      card.className = "post-card";
+      const card = document.createElement('div');
+      card.className = 'post-card';
 
-      const infoDiv = document.createElement("div");
-      infoDiv.className = "post-info";
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'post-info';
 
-      const titleLink = document.createElement("a");
-      titleLink.href = "/post.html?id=" + post.id;
-      titleLink.className = "post-title";
+      const titleLink = document.createElement('a');
+      titleLink.href = '/post.html?id=' + post.id;
+      titleLink.className = 'post-title';
       titleLink.textContent = post.title;
 
-      const date = new Date(post.createdAt).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
+      const date = new Date(post.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
       });
 
-      const meta = document.createElement("div");
-      meta.className = "post-meta";
-      meta.textContent = "Posted on " + date;
+      const meta = document.createElement('div');
+      meta.className = 'post-meta';
+      meta.textContent = 'Posted on ' + date;
 
       infoDiv.appendChild(titleLink);
       infoDiv.appendChild(meta);
 
-      const actionsDiv = document.createElement("div");
-      actionsDiv.className = "post-actions";
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'post-actions';
 
-      const editBtn = document.createElement("a");
-      editBtn.href = "/editor.html?id=" + post.id;
-      editBtn.className = "btn-action btn-edit";
-      editBtn.textContent = "Edit";
+      const editBtn = document.createElement('a');
+      editBtn.href = '/editor.html?id=' + post.id;
+      editBtn.className = 'btn-action btn-edit';
+      editBtn.textContent = 'Edit';
 
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "btn-action btn-delete";
-      deleteBtn.textContent = "Delete";
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn-action btn-delete';
+      deleteBtn.textContent = 'Delete';
       deleteBtn.onclick = function () {
-        if (
-          confirm(
-            "Are you sure you want to delete this post? This action cannot be undone.",
-          )
-        ) {
+        if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
           deletePost(post.id);
         }
       };
@@ -70,33 +65,33 @@
   }
 
   function deletePost(id) {
-    AuthClient.request("/api/content/" + id, {
-      method: "DELETE",
+    AuthClient.request('/api/content/' + id, {
+      method: 'DELETE',
     })
       .then(function (res) {
-        if (!res.ok) throw new Error("Failed to delete post");
+        if (!res.ok) throw new Error('Failed to delete post');
         loadMyPosts();
       })
       .catch(function (err) {
-        Utils.showError("Failed to delete post.");
+        Utils.showError('Failed to delete post.');
       });
   }
 
   function loadMyPosts() {
-    AuthClient.request("/api/content/my-posts")
+    AuthClient.request('/api/content/my-posts')
       .then(function (res) {
-        if (!res.ok) throw new Error("Failed to load posts");
+        if (!res.ok) throw new Error('Failed to load posts');
         return res.json();
       })
       .then(function (posts) {
         renderPosts(posts);
       })
       .catch(function (err) {
-        Utils.showError("Failed to load your content.");
+        Utils.showError('Failed to load your content.');
       });
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener('DOMContentLoaded', function () {
     AuthClient.loadUserProfile(function () {
       loadMyPosts();
     });

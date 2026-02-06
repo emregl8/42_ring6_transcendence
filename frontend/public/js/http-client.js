@@ -1,15 +1,15 @@
 (function () {
-  "use strict";
+  'use strict';
   function normalizeOptions(options) {
     const opts = options ? { ...options } : {};
-    opts.credentials = "include";
+    opts.credentials = 'include';
     opts.headers = {
-      Accept: "application/json",
+      Accept: 'application/json',
       ...opts.headers,
     };
-    const csrfToken = Utils.getCookie("XSRF-TOKEN");
+    const csrfToken = Utils.getCookie('XSRF-TOKEN');
     if (csrfToken) {
-      opts.headers["X-XSRF-TOKEN"] = csrfToken;
+      opts.headers['X-XSRF-TOKEN'] = csrfToken;
     }
     return opts;
   }
@@ -23,21 +23,17 @@
 
   function get(url, options) {
     const opts = options ? { ...options } : {};
-    opts.method = "GET";
+    opts.method = 'GET';
     return request(url, opts);
   }
 
   function post(url, options) {
     const opts = options ? { ...options } : {};
-    opts.method = "POST";
-    if (
-      opts.body &&
-      typeof opts.body === "object" &&
-      !(opts.body instanceof FormData)
-    ) {
+    opts.method = 'POST';
+    if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
       opts.headers = {
         ...opts.headers,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       };
       opts.body = JSON.stringify(opts.body);
     }

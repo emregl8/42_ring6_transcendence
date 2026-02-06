@@ -1,15 +1,15 @@
 (function () {
-  "use strict";
+  'use strict';
   let refreshTimer = null;
   let refreshPromise = null;
 
   function refresh() {
     if (refreshPromise) return refreshPromise;
-    refreshPromise = HttpClient.post("/api/auth/refresh", {
-      headers: { Accept: "application/json" },
+    refreshPromise = HttpClient.post('/api/auth/refresh', {
+      headers: { Accept: 'application/json' },
     })
       .then(function (res) {
-        if (!res.ok) throw new Error("Refresh failed");
+        if (!res.ok) throw new Error('Refresh failed');
         return res.json();
       })
       .then(function (data) {
@@ -44,10 +44,10 @@
     if (globalThis.AuthClient && globalThis.AuthClient.logout) {
       globalThis.AuthClient.logout();
     } else {
-      globalThis.location.replace("/");
+      globalThis.location.replace('/');
     }
   }
-  globalThis.addEventListener("beforeunload", stop);
+  globalThis.addEventListener('beforeunload', stop);
   globalThis.TokenManager = Object.freeze({
     refresh: refresh,
     start: start,

@@ -43,24 +43,30 @@ export class DatabaseConfigService {
     rejectUnauthorized: boolean;
     ca: string;
   } {
-    let sslEnabled: boolean;
-    try {
-      sslEnabled = parseBoolean(appConfig.DB_SSL_ENABLED, 'DB_SSL_ENABLED');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Invalid DB_SSL_ENABLED value';
-      throw new ConfigurationError(message);
-    }
-
-    if (sslEnabled === false) {
+    if (parseBoolean(appConfig.DB_SSL_ENABLED, 'DB_SSL_ENABLED') === false) {
       throw new ConfigurationError('SSL must be enabled');
     }
 
-    if (appConfig.DB_SSL_CA_PATH === null || appConfig.DB_SSL_CA_PATH === undefined || appConfig.DB_SSL_CA_PATH === '') {
+    const caPath = this.validateCaPath(appConfig.DB_SSL_CA_PATH);
+
+    const rejectUnauthorized = parseBoolean(appConfig.DB_SSL_REJECT_UNAUTHORIZED, 'DB_SSL_REJECT_UNAUTHORIZED');
+    if (rejectUnauthorized === false) {
+      throw new ConfigurationError('DB_SSL_REJECT_UNAUTHORIZED must be true for security');
+    }
+
+    return {
+      rejectUnauthorized: true,
+      ca: fs.readFileSync(caPath, 'utf8'),
+    };
+  }
+
+  private validateCaPath(caPath: string | undefined): string {
+    if (caPath === null || caPath === undefined || caPath === '') {
       throw new ConfigurationError('DB_SSL_CA_PATH must be provided when SSL is enabled');
     }
 
     const trustedBases = ['/vault/secrets', '/etc/postgres-ca'];
-    const resolved = path.resolve(appConfig.DB_SSL_CA_PATH);
+    const resolved = path.resolve(caPath);
 
     let realResolved: string;
     try {
@@ -71,39 +77,27 @@ export class DatabaseConfigService {
 
     const resolvedBases = trustedBases.map((b) => path.resolve(b));
     const allowed = resolvedBases.some((base) => realResolved === base || realResolved.startsWith(base + path.sep));
-    if (allowed === false) {
+
+    if (!allowed) {
       throw new ConfigurationError('DB_SSL_CA_PATH points outside trusted vault path');
     }
 
-    if (fs.existsSync(realResolved) === false) {
+    if (!fs.existsSync(realResolved)) {
       throw new ConfigurationError('SSL certificate not found');
     }
+
     const stat = fs.statSync(realResolved);
-    if (stat.isFile() === false) {
+    if (!stat.isFile()) {
       throw new ConfigurationError('DB_SSL_CA_PATH is not a file');
     }
+
     try {
       fs.accessSync(realResolved, fs.constants.R_OK);
     } catch {
       throw new ConfigurationError('DB_SSL_CA_PATH is not readable');
     }
 
-    let rejectUnauthorized: boolean;
-    try {
-      rejectUnauthorized = parseBoolean(appConfig.DB_SSL_REJECT_UNAUTHORIZED, 'DB_SSL_REJECT_UNAUTHORIZED');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Invalid DB_SSL_REJECT_UNAUTHORIZED value';
-      throw new ConfigurationError(message);
-    }
-
-    if (rejectUnauthorized === false) {
-      throw new ConfigurationError('DB_SSL_REJECT_UNAUTHORIZED must be true for security');
-    }
-
-    return {
-      rejectUnauthorized: true,
-      ca: fs.readFileSync(realResolved, 'utf8'),
-    };
+    return realResolved;
   }
 
   private createConnectionPoolConfig(): {

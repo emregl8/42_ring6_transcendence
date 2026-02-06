@@ -30,6 +30,18 @@ interface Intra42Profile {
   [key: string]: unknown;
 }
 
+export interface ProjectsUsersResponse {
+  id: number;
+  final_mark: number | null;
+  status: string;
+  ['validated?']: boolean;
+  project?: {
+    id: number;
+    name: string;
+    slug: string;
+  };
+}
+
 @Controller('auth')
 export class OAuthController {
   private readonly logger = new Logger(OAuthController.name);
@@ -86,7 +98,7 @@ export class OAuthController {
   @Get('login')
   async login(@Res() res: Response): Promise<void> {
     const state = crypto.randomBytes(32).toString('hex');
-    await this.redisService.set(`oauth_state:${state}`, '1', 600); // 10 minutes TTL
+    await this.redisService.set(`oauth_state:${state}`, '1', 600);
 
     const authUrl = `https://api.intra.42.fr/oauth/authorize?client_id=${this.clientId}&redirect_uri=${encodeURIComponent(
       this.callbackUrl
@@ -112,8 +124,11 @@ export class OAuthController {
 
       const code = this.validateAuthorizationCode(req, clientIp);
       const accessToken = await this.exchangeCodeForToken(code, clientIp);
+
       const profile = await this.fetchUserProfile(accessToken);
-      const user = await this.processUser(profile);
+      const projects = await this.fetchUserProjects(accessToken, String(profile.id));
+
+      const user = await this.processUser(profile, projects);
 
       this.auditLogService.logSuccessfulAuthentication(user.id, 'OAuth-42');
 
@@ -191,7 +206,36 @@ export class OAuthController {
     return profile;
   }
 
-  private async processUser(profile: Intra42Profile): Promise<User> {
+  private async fetchUserProjects(accessToken: string, userId: string): Promise<object[]> {
+    const response = await fetch(`https://api.intra.42.fr/v2/users/${userId}/projects_users?page[size]=100`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!response.ok) {
+      this.logger.warn(`Projects retrieval failed: status=${response.status}`);
+      return [];
+    }
+
+    const projects = (await response.json()) as ProjectsUsersResponse[];
+    if (!Array.isArray(projects)) {
+      return [];
+    }
+
+    return projects.map((p) => ({
+      id: p.id,
+      final_mark: p.final_mark,
+      status: p.status,
+      'validated?': p['validated?'],
+      project: {
+        id: p.project?.id,
+        name: p.project?.name,
+        slug: p.project?.slug,
+      },
+    }));
+  }
+
+  private async processUser(profile: Intra42Profile, projects: object[]): Promise<User> {
     if (profile.id === undefined || profile.login === undefined || profile.email === undefined) {
       throw new UnauthorizedException('Invalid profile data: missing required fields');
     }
@@ -208,6 +252,7 @@ export class OAuthController {
       firstName: isNotNullOrEmpty(profile.first_name) ? String(profile.first_name).trim() : '',
       lastName: isNotNullOrEmpty(profile.last_name) ? String(profile.last_name).trim() : '',
       avatar: isNotNullOrEmpty(profile.image?.link) ? String(profile.image?.link).trim() : undefined,
+      projects,
     });
   }
 

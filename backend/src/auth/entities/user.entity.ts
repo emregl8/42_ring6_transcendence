@@ -23,6 +23,9 @@ export class User {
   @Column({ nullable: true })
   avatar?: string;
 
+  @Column({ type: 'jsonb', nullable: true })
+  projects?: object[];
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 
