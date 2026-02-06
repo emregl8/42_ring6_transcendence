@@ -9,8 +9,8 @@
     "start": "node dist/main.js",
     "dev": "ts-node src/main.ts",
     "start:prod": "node dist/main.js",
-    "format": "prettier --write \"src/**/*.ts\" \"../frontend/public/js/*.js\"",
-    "format:check": "prettier --check \"src/**/*.ts\"",
+    "format": "prettier --config ../tools/.prettierrc --write \"src/**/*.ts\" \"../frontend/public/js/*.js\" \"../tools/*.js\"",
+    "format:check": "prettier --config ../tools/.prettierrc --check \"src/**/*.ts\" \"../tools/*.js\"",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix"
   },
@@ -26,6 +26,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
     "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.3",
     "helmet": "^8.1.0",
     "ioredis": "^5.9.2",
     "passport": "^0.7.0",

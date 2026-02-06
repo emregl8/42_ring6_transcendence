@@ -1,0 +1,13 @@
+{
+  "name": "42-lms-tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "UNLICENSED",
+  "description": "Internal maintenance and analysis tools",
+  "main": "sonar-project.js",
+  "devDependencies": {
+    "dotenv": "^17.2.3",
+    "sonarqube-scanner": "^4.3.4"
+  }
+}

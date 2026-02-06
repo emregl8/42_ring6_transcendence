@@ -51,6 +51,14 @@ fix:
 	@echo "Running prettier format..."
 	@cd backend && npm run format
 
+sonar:
+	@echo "Cleaning up SonarQube cache..."
+	@rm -rf .scannerwork
+	@echo "Running SonarQube analysis..."
+	@cd tools && node sonar-project.js
+	@echo "Fetching analysis results..."
+	@cd tools && node fetch-sonar-report.js
+
 rebuild-backend:
 	@echo "Rebuilding backend..."
 	@docker build -t transcendence-backend:latest ./backend
@@ -148,6 +156,7 @@ help:
 	@echo "╠════════════════════════════════════════════════════╣"
 	@echo "║ ✨ QUALITY                                         ║"
 	@echo "║   make fix            - Lint fix + format          ║"
+	@echo "║   make sonar          - Run SonarQube analysis     ║"
 	@echo "╠════════════════════════════════════════════════════╣"
 	@echo "║ 🧹 CLEANUP                                         ║"
 	@echo "║   make clean    - Delete namespace                 ║"
@@ -156,5 +165,5 @@ help:
 
 .PHONY: all dev stop start clean fclean status \
 	logs-backend logs-frontend logs-postgres logs-vault logs-redis \
-	fix rebuild-backend rebuild-frontend rebuild-postgres \
+	fix sonar rebuild-backend rebuild-frontend rebuild-postgres \
 	shell-backend shell-frontend shell-postgres shell-vault help backup
